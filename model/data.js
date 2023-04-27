@@ -31,12 +31,14 @@ class Data {
 
     addPendingItem(id, value) {
         return new Promise((resolve, reject) => {
-            this.db.put( this.createPendingId(id), JSON.stringify(value), (err) => {
+          console.log('adding pending item', id, value)
+          let pendingid = this.createPendingId(id);
+            this.db.put( pendingid, JSON.stringify(value), (err) => {
                 if (err) {
                     console.error("Error in addPendingItem", err);
                     reject(err);
                 } else {
-                    console.log('added pending item', id)
+                    console.log('added pending item', pendingid)
                     resolve(true);
                 }
             });

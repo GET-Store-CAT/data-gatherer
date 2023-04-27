@@ -30,6 +30,8 @@ class Gatherer {
         // 1. Fetch an initial list of items using the query provided
         let startupList = await this.adapter.newSearch(this.options.query);
         let startupItems = await this.adapter.storeListAsPendingItems(startupList); 
+        let test_pendingid = await this.db.get("pending:arweaveNodes:222.239.92.25:1984");
+        console.log('test pending id', test_pendingid);
         
         // 2. Save the items to the database with the 'pending' prefix
         // 3. Fetch the next page of items using the query provided

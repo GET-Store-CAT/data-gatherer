@@ -108,12 +108,16 @@ class Arweave extends Adapter {
   storeListAsPendingItems(list) {
     console.log('db', this.db)
     // TODO - store the list of nodes as pending items using db
+    // TODO : Try async/await here
     for (let node of list) {
       // the main difference with this adapter is that the node's IP address is the data for each item, so the ID === VALUE 
-      if (!this.db.isPendingItem(node) && !this.db.isDataItem(node)) {
-        this.db.addPendingItem(node, node)
-      } 
+      // if (!this.db.isPendingItem(node) && !this.db.isDataItem(node)) {
+      this.db.addPendingItem(node, node)
+      // } 
+      let test_result = this.db.get("pending:arweaveNodes:" + node)
+      console.log('test_result', test_result)
     }
+
     return true;
   }
 

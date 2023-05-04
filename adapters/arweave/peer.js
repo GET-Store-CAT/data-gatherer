@@ -1,4 +1,5 @@
 let superagent = require('superagent')
+const axios = require('axios');
 
 let superagentdelays = {
     hc : {
@@ -6,12 +7,12 @@ let superagentdelays = {
         deadline: 2000
     }, 
     txfetch : {
-        response: 2000,
-        deadline: 10000
+        response: 500,
+        deadline: 1000
     },
     peers : {
-        response: 2000,
-        deadline: 10000
+        response: 500,
+        deadline: 1000
     }
 }
 
@@ -23,7 +24,7 @@ class Peer {
         this.containsTx = false;
         this.peers = [];
     }
-    healthCheck = async function () {
+    healthCheck = async function (url) {
         // console.log('entered healthcheck')
         if (this.location.length > 100) {
             console.error('location field is too large')
@@ -31,18 +32,17 @@ class Peer {
         }
         try {
             // console.log('sending health check for ', this.location)
-            const payload = await superagent.get(`${this.location}/info`).timeout({
-                response: superagentdelays.hc.response,  
-                deadline: superagentdelays.hc.deadline, 
-              })
-            // console.log('payload received', payload)
-            if (payload.text) {
+            const response = await axios.get(url, {
+                timeout: 1000,
+            });
+            console.log('payload received', response.data)
+            if (response.data) {
               this.isHealthy = true;
             } 
             // console.log('healthcheck completed')
         } catch (err) {
 
-            // console.error ("can't fetch " + this.location, err)
+            console.error ("can't fetch " + this.location)
         }
         return
     }
@@ -50,17 +50,18 @@ class Peer {
     // FullScan
     // performs a full scan on a node
     // node: a crawler object must be passed in to allow new peers to be added
-    fullScan = async function (txId) {
-        // console.log('checking ' + this.location)
-        if ( !this.isHealthy ) await this.healthCheck ();
+    fullScan = async function (peer, txid) {
+        console.log('checking ' + this.location)
+        let url = `http://${peer}/peers`
+        if ( !this.isHealthy ) await this.healthCheck (url);
         
         // console.log('moved past')
         if ( this.isHealthy ) {
             // console.log('getting peers for ' + this.location)
-            await this.getPeers ()
+            await this.getPeers (url)
 
             // console.log('checking tx for ' + this.location)
-            await this.checkTx (txId)
+            await this.checkTx (txid)
         }
 
         // console.log(this.peers)
@@ -70,18 +71,17 @@ class Peer {
 
     // CheckTx
     // Checks if a specific node has a given txId
-    checkTx = async function ( txId ) {
+    checkTx = async function ( txid ) {
         if ( !this.isHealthy ) await this.healthCheck ();
         
         if ( this.isHealthy ) {
             try {
                 // console.log('sending txid check for ', peerUrl)
-                const payload = await superagent.get(`${this.location}/${ txId }`).timeout({
-                    response: superagentdelays.txfetch.response,  
-                    deadline: superagentdelays.txfetch.deadline, 
-                  })
+                const response = await axios.get(url, {
+                    timeout: 1000,
+                });
                 // console.log('payload returned from ' + peerUrl, payload)
-                const body = JSON.parse(payload.text);
+                const body = JSON.parse(response.data);
                 if (body) {
                   this.containsTx = true;
                 } 
@@ -95,7 +95,7 @@ class Peer {
 
     // getPeers
     // Checks peers endpoint
-    getPeers = async function (  ) {
+    getPeers = async function (url) {
         if ( !this.isHealthy ) await this.healthCheck ();
 
         // console.log('trying to get peers')
@@ -103,12 +103,11 @@ class Peer {
             // console.log('passed healthcheck in getPeers')
             try {
                 // console.log('sending PEER check for ', this.location)
-                const payload = await superagent.get(`${this.location}/peers`).timeout({
-                    response: superagentdelays.peers.response,  
-                    deadline: superagentdelays.peers.deadline, 
-                  })
+                const response = await axios.get(url, {
+                    timeout: 1000,
+                });
                 // console.log('payload returned from ' + this.location, payload)
-                const body = JSON.parse(payload.text);
+                const body = response.data;
                 // console.log("BODY", body)
                 if (body) {
                   this.peers = body;

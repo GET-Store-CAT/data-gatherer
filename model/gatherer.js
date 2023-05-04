@@ -13,119 +13,220 @@ const Adapter = require('./adapter');
 const Data = require('./data');
 const Search = require('./search');
 const Twitter = require('../adapters/twitter');
+const Peer = require('../adapters/arweave/peer');
+const fs = require('fs');
+const { Queue } = require('async-await-queue');
 
 class Gatherer {
-    constructor(db, adapter, options ) {
-        console.log('creating new adapter', db.db, adapter, options)
-        this.db = db;
-        this.maxRetry = options.maxRetry;
-        this.options = options;
-        this.adapter = adapter;
-        this.pending = [];
-    }
+  constructor(db, adapter, options) {
+    console.log('creating new adapter', db.db, adapter, options);
+    this.db = db;
+    this.maxRetry = options.maxRetry;
+    this.options = options;
+    this.adapter = adapter;
+    this.batchSize = options.batchSize | 10;
+    this.pending = [];
+    this.running = [];
+    this.queried = [];
+    this.healthyNodes = [];
+    this.replicators = [];
+    this.newFound = 0;
+    this.queue = []; // the list of items the task_queue will execute asynchronously
+    this.task_queue = new Queue(10, 1000); // no more than two tasks at a time, 100ms delay between sequential tasks
+    this.txId = 'twIEDggMpjrO_pXnRfVqoprVtiuf_XHxw72nQvWS8bE'
+}
 
-    gather = async (limit) => {
+  gather = async limit => {
+    console.log('limit received', limit);
 
-        // I. Startup
-        // 1. Fetch an initial list of items using the query provided
-        let startupList = await this.adapter.newSearch(this.options.query);
-        let startupItems = await this.adapter.storeListAsPendingItems(startupList); 
-        
-        // 2. Save the items to the database with the 'pending' prefix
-        // 3. Fetch the next page of items using the query provided
-        
-        // the following flags are for debug use only
-            let exit = false; 
-            let blue = true;
-            
-        while (blue) {
-            let nextPage = await this.adapter.getNextPage();
-            if (nextPage) {
+    // I. Startup
+    // 1. Fetch an initial list of items using the query provided
+    let startupList = await this.adapter.newSearch(this.options.query);
+    let startupItems = await this.adapter.storeListAsPendingItems(startupList);
 
-                if (this.options.nextLimit) {
-                    if (nextPage.length > this.options.nextLimit) {
-                        nextPage = nextPage.slice(0, this.options.nextLimit);
-                        exit = true;
-                    }
-                }
-                let nextItems = await this.adapter.storeListAsPendingItems(nextPage);
-            } else {
-                break;
-            }
-            if (exit) {
-                break;
-            }
-            blue = false;
+    // 2. Save the items to the database with the 'pending' prefix
+    // 3. Fetch the next page of items using the query provided
+
+    // the following flags are for debug use only
+    let exit = false;
+    let blue = true;
+
+    while (blue) {
+      let nextPage = await this.adapter.getNextPage();
+      if (nextPage) {
+        if (this.options.nextLimit) {
+          if (nextPage.length > this.options.nextLimit) {
+            nextPage = nextPage.slice(0, this.options.nextLimit);
+            exit = true;
+          }
         }
-
-
-        // II . Main Loop
-            // 4. If no next page exists, or the options.nextLimit flag is used, use the list of items to find a second tier of items that are connected to each item found in the first list
-            // 5. Save the second tier of items to the database with the 'pending' prefix
-            // 6. Fetch the next page of items using the query provided
-            // 7. Repeat steps 4-6 until the limit is reached or there are no more pages to fetch
-
-            let red = true;
-            while (red) {
-                this.pending = await this.db.getPendingList(this.options.limit);
-
-                let queue = [];
-                
-                try {
-                    if (this.pending.length > 0) {
-                        this.queue.push(this.task_queue.run(() =>
-                            this.addBatch()
-                            .catch((e) => console.error(e))
-                        ))
-
-                        await Promise.allSettled(this.queue)  // TODO fix batching as this will only resolve once all queued items have run, while we want to refill the batch as it is emptied 
-                    } else {
-                        console.log('queue empty')
-                        break;
-                    }
-                } catch (err) {
-                    console.error('error processing a node', err)
-                    break;
-                }
-                red = false;
-            }
-        
-        
-
-        // III. Diagnostics 
-            // 8. Return live asynchronous updates of the items being saved to the database
-
-        // IV. Auditing and Proofs
-            // 9. Incrementally upload new items to IPFS and save the IPFS hash to the database (i.e. db.put('ipfs:' + item.id + ':data, ipfsHash)) for use in the rest apis
-            // 10. Any time an item is saved to the database, check if it is a duplicate of an item already in the database. If it is a duplicate, delete the item from the database and return the id of the duplicate item instead (check for item updates)
-            // 11. Sign all IPFS payloads and save the signature to the database (i.e. db.put('ipfs:' + item.id + ':signature', ipfsHash)) for use in the rest apis
+        let nextItems = await this.adapter.storeListAsPendingItems(nextPage);
+      } else {
+        break;
+      }
+      if (exit) {
+        break;
+      }
+      blue = false;
     }
 
-    addBatch = async function () {
-        for (let i = 0; i < this.batchSize; i++ ) {
-            await this.processPending ()
+    // II . Main Loop
+    // 4. If no next page exists, or the options.nextLimit flag is used, use the list of items to find a second tier of items that are connected to each item found in the first list
+    // 5. Save the second tier of items to the database with the 'pending' prefix
+    // 6. Fetch the next page of items using the query provided
+    // 7. Repeat steps 4-6 until the limit is reached or there are no more pages to fetch
+
+    let red = true;
+    this.pending = await this.db.getPendingList(this.options.limit);
+    while (red) {
+      try {
+        if (this.pending.length > 0) {
+          console.log('adding batch', this.pending.length);
+          this.queue.push(
+            this.task_queue.run(() =>
+              this.addBatch().catch(e => console.error(e)),
+            ),
+          );
+
+          await Promise.allSettled(this.queue); // TODO fix batching as this will only resolve once all queued items have run, while we want to refill the batch as it is emptied
+        } else {
+          console.log('queue empty');
+          this.printStatus();
+          break;
         }
+      } catch (err) {
+        console.error('error processing a node', err);
+        break;
+      }
+      red = false;
     }
 
-    processPending = async function ( ) {
-        // get a random node from the pending list
-        let item = this.adapter.getNextPendingItem();
-        if (item) {
-            this.adapter.parseOne(item) // this function should take care of removing the old pending item and adding new pending items for the list from this item
+    // III. Diagnostics
+    // 8. Return live asynchronous updates of the items being saved to the database
+
+    // IV. Auditing and Proofs
+    // 9. Incrementally upload new items to IPFS and save the IPFS hash to the database (i.e. db.put('ipfs:' + item.id + ':data, ipfsHash)) for use in the rest apis
+    // 10. Any time an item is saved to the database, check if it is a duplicate of an item already in the database. If it is a duplicate, delete the item from the database and return the id of the duplicate item instead (check for item updates)
+    // 11. Sign all IPFS payloads and save the signature to the database (i.e. db.put('ipfs:' + item.id + ':signature', ipfsHash)) for use in the rest apis
+  };
+
+  addBatch = async function () {
+    for (let i = 0; i < this.pending.length; i++) {
+      await this.processPending();
+    }
+  };
+
+  processPending = async function () {
+    // get a random node from the pending list
+    if (this.pending.length > 0) {
+      let item = await this.getRandomNode();
+      console.log('item', item);
+      const peerInstance = new Peer(item);
+      // console.log(`starting ${ item.location }, remaining ${ this.pending.length }`);
+      let result = await peerInstance.fullScan(item, this.txId);
+      this.queried.push(item.location);
+      if (result.isHealthy) console.log('received ', result);
+
+      if (result.isHealthy) {
+        this.updateHealthy(item.location);
+
+        // console.log(`Healthy node found at ${ item.location } `)
+        this.printStatus();
+
+        if (result.peers.length > 0) {
+          // console.log('has peers!')
+          this.addNodes(result.peers);
         }
-
+        if (result.containsTx) {
+          // console.log('is replicator!!!')
+          this.addReplicator(item.location);
+        }
+      }
+      this.removeFromRunning(item.location); // this function should take care of removing the old pending item and adding new pending items for the list from this item
+    } else {
+      this.printStatus();
+      return;
     }
+  };
 
-    // TODO - fix the methods below with proper db prefix mgmt
-    // TODO then integrate them into the above flows to allow async queueing of reads from APIs and writes to the db
-    getData(id) {
-        return this.db.get(id);
+  getRandomNode = async function () {
+    try {
+      let index = Math.floor(Math.random() * this.pending.length);
+      let peer = this.pending[index];
+      this.pending[index] = this.pending[this.pending.length - 1];
+      this.pending.pop();
+      this.running.push(peer);
+      return peer;
+    } catch (err) {
+      console.log('error selecting random node', err);
+      return;
     }
+  };
 
-    getList (options) {
-        return this.db.getList(options);
+  removeFromRunning = async function (location) {
+    let index = this.running.indexOf(element => element == location);
+    this.running.splice(index, 1);
+  };
+
+  addNodes = async function (peers) {
+    // console.log('======= adding new nodes! ========', peers)
+    if (!peers || peers.length < 1)
+      throw new Error('You must pass an array of peer objects');
+
+    peers.forEach((peerUrl) => {
+      // a bit sloppy, but add the peer if it's not already in either the pending or past lists
+      if (
+        !this.queried.includes(peerUrl) &&
+        !this.pending.includes(peerUrl) &&
+        !this.running.includes(peerUrl)
+      ) {
+        this.pending.push(new Peer(peerUrl));
+        this.newFound = this.newFound + 1;
+      }
+    });
+  };
+
+  addToHealthy(nodeLocation) {
+    fs.appendFile("./healthy.txt", nodeLocation + " ", function (err) {
+      if (err) throw err;
+    });
+  }
+
+  updateHealthy = async function (peerLocation) {
+    if (!this.healthyNodes.includes(peerLocation)) {
+      this.healthyNodes.push(peerLocation);
     }
+    this.addToHealthy(peerLocation);
+  };
 
+  addReplicator = async function (peerLocation) {
+    if (!this.replicators.includes(peerLocation)) {
+      this.replicators.push(peerLocation);
+    }
+    addToReplicators(peerLocation);
+  };
+
+  printStatus = async function () {
+    console.log(`\r\nResults: \r\n
+                Healthy: ${this.healthyNodes.length} \r\n
+                Queried: ${this.queried.length} \r\n
+                Replications: ${this.replicators.length}\r\n
+                Pending: ${this.pending.length}\r\n
+                New Nodes Found: ${this.newFound}\r\n
+                Running: ${this.running.length}\r\n
+                In Queue: ${this.queue.length} 
+            `);
+  };
+
+  // TODO - fix the methods below with proper db prefix mgmt
+  // TODO then integrate them into the above flows to allow async queueing of reads from APIs and writes to the db
+  getData(id) {
+    return this.db.get(id);
+  }
+
+  getList(options) {
+    return this.db.getList(options);
+  }
 }
 
 module.exports = Gatherer;

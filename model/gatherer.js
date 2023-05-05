@@ -33,8 +33,8 @@ class Gatherer {
     this.newFound = 0;
     this.queue = []; // the list of items the task_queue will execute asynchronously
     this.task_queue = new Queue(5, 10000); // no more than 5 tasks at a time, 10000ms delay between sequential tasks
-    this.txId = 'twIEDggMpjrO_pXnRfVqoprVtiuf_XHxw72nQvWS8bE'
-}
+    this.txId = 'twIEDggMpjrO_pXnRfVqoprVtiuf_XHxw72nQvWS8bE';
+  }
 
   gather = async limit => {
     console.log('limit received', limit);
@@ -103,12 +103,30 @@ class Gatherer {
 
     // III. Diagnostics
     // 8. Return live asynchronous updates of the items being saved to the database
+    let healthyNodes = await this.db.getHealthyList();
+    if (healthyNodes) {
+      console.log('healthy nodes', healthyNodes);
+      const cid = this.uploadIPFS(healthyNodes);
+      // IV. Auditing and Proofs
+      // 9. Incrementally upload new items to IPFS and save the IPFS hash to the database (i.e. db.put('ipfs:' + item.id + ':data, ipfsHash)) for use in the rest apis
+      // 10. Any time an item is saved to the database, check if it is a duplicate of an item already in the database. If it is a duplicate, delete the item from the database and return the id of the duplicate item instead (check for item updates)
+      // ? ^^ set db will auto check the db for duplicates, set into db if no peer found or update the cid hash to the latest one
+      healthyNodes.forEach(async peer => {
+        await this.db.setIPFS(`ipfs:${peer}`, cid);
+      });
+      
+      return healthyNodes;
+      // TODO 11. Sign all IPFS payloads and save the signature to the database (i.e. db.put('ipfs:' + item.id + ':signature', ipfsHash)) for use in the rest apis
 
-    // IV. Auditing and Proofs
-    // 9. Incrementally upload new items to IPFS and save the IPFS hash to the database (i.e. db.put('ipfs:' + item.id + ':data, ipfsHash)) for use in the rest apis
-    // 10. Any time an item is saved to the database, check if it is a duplicate of an item already in the database. If it is a duplicate, delete the item from the database and return the id of the duplicate item instead (check for item updates)
-    // 11. Sign all IPFS payloads and save the signature to the database (i.e. db.put('ipfs:' + item.id + ':signature', ipfsHash)) for use in the rest apis
+    } else {
+      console.log('no healthy nodes found');
+    }
   };
+
+  // TODO - implement this method
+  uploadIPFS = async function (data) {
+    return cid
+  }
 
   addBatch = async function () {
     for (let i = 0; i < this.pending.length; i++) {
@@ -123,9 +141,10 @@ class Gatherer {
       console.log('item', item);
       const peerInstance = new Peer(item);
       // console.log(`starting ${ item.location }, remaining ${ this.pending.length }`);
+      this.printStatus();
       let result = await peerInstance.fullScan(item, this.txId);
       // remove from pending
-      await this.db.deleteItem(`pending:${item}`)
+      await this.db.deleteItem(`pending:${item}`);
       this.queried.push(item.location);
       if (result.isHealthy) {
         console.log('received ', result);
@@ -178,7 +197,7 @@ class Gatherer {
     if (!peers || peers.length < 1)
       throw new Error('You must pass an array of peer objects');
 
-    peers.forEach((peerUrl) => {
+    peers.forEach(peerUrl => {
       // a bit sloppy, but add the peer if it's not already in either the pending or past lists
       if (
         !this.queried.includes(peerUrl) &&
@@ -192,7 +211,7 @@ class Gatherer {
   };
 
   addToHealthy(nodeLocation) {
-    fs.appendFile("./healthy.txt", nodeLocation + " ", function (err) {
+    fs.appendFile('./healthy.txt', nodeLocation + ' ', function (err) {
       if (err) throw err;
     });
   }
@@ -200,7 +219,7 @@ class Gatherer {
   updateHealthy = async function (peerLocation) {
     if (!this.healthyNodes.includes(peerLocation)) {
       this.healthyNodes.push(peerLocation);
-      this.db.addHealthyItem(peerLocation, peerLocation)
+      this.db.addHealthyItem(peerLocation, peerLocation);
     }
     this.addToHealthy(peerLocation);
   };

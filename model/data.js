@@ -125,6 +125,7 @@ class Data {
     return new Promise((resolve, reject) => {
       let dataStore = [];
       let options = {
+        gt: `pending:${this.name}`,
         lt: `pending:${this.name}~`,
         reverse: true,
         keys: true,
@@ -277,6 +278,35 @@ class Data {
           console.log('Stream ended');
           resolve(healthyStore);
         });
+    });
+  }
+
+  // add IPFS to db
+  setIPFS(id, cid) {
+    return new Promise((resolve, reject) => {
+      this.db.put(`ipfs:${id}`, cid, err => {
+        if (err) {
+          console.error('Error in setIPFS', err);
+          reject(err);
+        } else {
+          console.log('added ipfs', id);
+          resolve(true);
+        }
+      });
+    });
+  }
+
+  // get IPFS from db
+  getIPFS(id) {
+    return new Promise((resolve, reject) => {
+      this.db.get(`ipfs:${id}`, (err, value) => {
+        if (err) {
+          console.error('Error in getIPFS', err, id);
+          resolve(null);
+        } else {
+          resolve(value);
+        }
+      });
     });
   }
 

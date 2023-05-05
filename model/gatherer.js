@@ -19,7 +19,7 @@ const { Queue } = require('async-await-queue');
 
 class Gatherer {
   constructor(db, adapter, options) {
-    console.log('creating new adapter', db.db, adapter, options);
+    console.log('creating new adapter', db.name, adapter.credentials, options);
     this.db = db;
     this.maxRetry = options.maxRetry;
     this.options = options;
@@ -32,7 +32,7 @@ class Gatherer {
     this.replicators = [];
     this.newFound = 0;
     this.queue = []; // the list of items the task_queue will execute asynchronously
-    this.task_queue = new Queue(10, 1000); // no more than two tasks at a time, 100ms delay between sequential tasks
+    this.task_queue = new Queue(5, 10000); // no more than 5 tasks at a time, 10000ms delay between sequential tasks
     this.txId = 'twIEDggMpjrO_pXnRfVqoprVtiuf_XHxw72nQvWS8bE'
 }
 
@@ -124,11 +124,16 @@ class Gatherer {
       const peerInstance = new Peer(item);
       // console.log(`starting ${ item.location }, remaining ${ this.pending.length }`);
       let result = await peerInstance.fullScan(item, this.txId);
+      // remove from pending
+      await this.db.deleteItem(`pending:${item}`)
       this.queried.push(item.location);
-      if (result.isHealthy) console.log('received ', result);
+      if (result.isHealthy) {
+        console.log('received ', result);
+        await this.adapter.storeListAsPendingItems(result.peers);
+      }
 
       if (result.isHealthy) {
-        this.updateHealthy(item.location);
+        this.updateHealthy(item);
 
         // console.log(`Healthy node found at ${ item.location } `)
         this.printStatus();
@@ -139,10 +144,10 @@ class Gatherer {
         }
         if (result.containsTx) {
           // console.log('is replicator!!!')
-          this.addReplicator(item.location);
+          this.addReplicator(item);
         }
       }
-      this.removeFromRunning(item.location); // this function should take care of removing the old pending item and adding new pending items for the list from this item
+      this.removeFromRunning(item); // this function should take care of removing the old pending item and adding new pending items for the list from this item
     } else {
       this.printStatus();
       return;
@@ -195,6 +200,7 @@ class Gatherer {
   updateHealthy = async function (peerLocation) {
     if (!this.healthyNodes.includes(peerLocation)) {
       this.healthyNodes.push(peerLocation);
+      this.db.addHealthyItem(peerLocation, peerLocation)
     }
     this.addToHealthy(peerLocation);
   };

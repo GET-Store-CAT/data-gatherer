@@ -396,6 +396,16 @@ class Data {
     console.log('new running ID: ', runningId);
     return runningId;
   }
+
+  //Tool to create a healthy ID
+  createHealthyId(id) {
+    console.log(id);
+    let normalId = this.createId(id);
+    console.log('normal ID is ' + normalId);
+    let healthyId = `healthy:${normalId}`;
+    console.log('new healthy ID: ', healthyId);
+    return healthyId;
+  }
 }
 
 module.exports = Data;

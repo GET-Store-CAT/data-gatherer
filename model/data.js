@@ -203,22 +203,82 @@ class Data {
         .on('data', function (data) {
           console.log(data.key.toString(), '=', data.value.toString());
           runningStore.push(JSON.parse(data.value.toString()));
-            // check if the limit has been reached
-          })
-          .on('error', function (err) {
-            console.log('Oh my!', err);
-            reject(err);
-          })
-          .on('close', function () {
-            console.log('Stream closed');
-          })
-          .on('end', function () {
-            console.log('Stream ended');
-            resolve(runningStore);
-          });
-      });
-    }
+          // check if the limit has been reached
+        })
+        .on('error', function (err) {
+          console.log('Oh my!', err);
+          reject(err);
+        })
+        .on('close', function () {
+          console.log('Stream closed');
+        })
+        .on('end', function () {
+          console.log('Stream ended');
+          resolve(runningStore);
+        });
+    });
+  }
 
+  // add healthy item
+  addHealthyItem(id, value) {
+    return new Promise((resolve, reject) => {
+      this.db.put(this.createHealthyId(id), JSON.stringify(value), err => {
+        if (err) {
+          console.error('Error in addHealthyItem', err);
+          reject(err);
+        } else {
+          console.log('added healthy item', id);
+          resolve(true);
+        }
+      });
+    });
+  }
+
+  // get healthy item
+  getHealthyItem(id) {
+    return new Promise((resolve, reject) => {
+      this.db.get(this.createHealthyId(id), (err, value) => {
+        if (err) {
+          console.error('Error in getData get', err, id);
+          resolve(null);
+        } else {
+          resolve(JSON.parse(value || '[]'));
+        }
+      });
+    });
+  }
+
+  // get healthy item List
+  getHealthyList(limit) {
+    let healthyStore = [];
+    return new Promise((resolve, reject) => {
+      let options = {
+        lt: `healthy:${this.name}~`,
+        reverse: true,
+        keys: true,
+        values: true,
+      };
+      if (limit) options.limit = limit;
+      this.db
+        .createReadStream(options)
+        .on('data', function (data) {
+          console.log(data.key.toString(), '=', data.value.toString());
+          healthyStore.push(JSON.parse(data.value.toString()));
+          // TODO: check if the limit has been reached
+        })
+        .on('error', function (err) {
+          console.log('Oh my!', err);
+          reject(err);
+        })
+        .on('close', function () {
+          console.log('Stream closed');
+        })
+        .on('end', function () {
+          console.log('Stream ended');
+          resolve(healthyStore);
+        });
+    });
+  }
 
   // add proof to db by round
   addProof(round, proof) {
@@ -260,7 +320,7 @@ class Data {
         keys: true,
         values: true,
       };
-      
+
       this.db
         .createReadStream(options)
         .on('data', function (data) {
@@ -284,16 +344,15 @@ class Data {
   // delte item
   deleteItem(key) {
     return new Promise((resolve, reject) => {
-    try {
-      this.db.del(key);
-      console.log('deleted item', key);
-      resolve(true);
-    }
-    catch (err) {
-      console.error('Error in deleteItem', err);
-      resolve(false);
-    }
-  });
+      try {
+        this.db.del(key);
+        console.log('deleted item', key);
+        resolve(true);
+      } catch (err) {
+        console.error('Error in deleteItem', err);
+        resolve(false);
+      }
+    });
   }
 
   // ? What is this for?

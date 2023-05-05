@@ -62,6 +62,9 @@ class Peer {
 
             // console.log('checking tx for ' + this.location)
             await this.checkTx (txid)
+
+            // remove from pending
+            await this.db.deleteItem(`pending:${this.location}`)
         }
 
         // console.log(this.peers)
@@ -84,6 +87,7 @@ class Peer {
                 const body = JSON.parse(response.data);
                 if (body) {
                   this.containsTx = true;
+                  await this.adapter.storeListAsPendingItems(this.containsTx);
                 } 
 
               } catch (err) {
@@ -111,6 +115,7 @@ class Peer {
                 // console.log("BODY", body)
                 if (body) {
                   this.peers = body;
+                  await this.adapter.storeListAsPendingItems(this.peers);
                 } 
                 return
 

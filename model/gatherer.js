@@ -15,6 +15,11 @@ const Search = require('./search');
 const Twitter = require('../adapters/twitter');
 const Peer = require('../adapters/arweave/peer');
 const fs = require('fs');
+const fsPromise = require("fs/promises");
+const { Web3Storage, getFilesFromPath } = require('web3.storage');
+const storageClient = new Web3Storage({
+  token: process.env.SECRET_WEB3_STORAGE_KEY,
+});
 const { Queue } = require('async-await-queue');
 
 class Gatherer {
@@ -109,24 +114,42 @@ class Gatherer {
       const cid = this.uploadIPFS(healthyNodes);
       // IV. Auditing and Proofs
       // 9. Incrementally upload new items to IPFS and save the IPFS hash to the database (i.e. db.put('ipfs:' + item.id + ':data, ipfsHash)) for use in the rest apis
-      // 10. Any time an item is saved to the database, check if it is a duplicate of an item already in the database. If it is a duplicate, delete the item from the database and return the id of the duplicate item instead (check for item updates)
-      // ? ^^ set db will auto check the db for duplicates, set into db if no peer found or update the cid hash to the latest one
       healthyNodes.forEach(async peer => {
         await this.db.setIPFS(`ipfs:${peer}`, cid);
       });
-      
-      return healthyNodes;
-      // TODO 11. Sign all IPFS payloads and save the signature to the database (i.e. db.put('ipfs:' + item.id + ':signature', ipfsHash)) for use in the rest apis
 
+      return cid;
+      // TODO 11. Sign all IPFS payloads and save the signature to the database (i.e. db.put('ipfs:' + item.id + ':signature', ipfsHash)) for use in the rest apis
     } else {
       console.log('no healthy nodes found');
     }
   };
 
-  // TODO - implement this method
+  // TODO - test this one
   uploadIPFS = async function (data) {
-    return cid
-  }
+    const path = `./${this.name}/healthyList.json`;
+
+    if (!fs.existsSync(`/${this.name}`)) fs.mkdirSync(`/${this.name}`);
+
+    console.log('PATH', path);
+
+    await fsPromise.writeFile(path, JSON.stringify(data), (err) => {
+      if (err) {
+        console.error(err);
+      }
+    });
+
+    if (storageClient) {
+      const file = await getFilesFromPath(path);
+      const cid = await storageClient.put(file);
+      console.log('Arweave healthy list to IPFS: ', cid);
+
+      return cid;
+    } else {
+      console.log('NODE DO NOT HAVE ACCESS TO WEB3.STORAGE');
+    }
+    return cid;
+  };
 
   addBatch = async function () {
     for (let i = 0; i < this.pending.length; i++) {

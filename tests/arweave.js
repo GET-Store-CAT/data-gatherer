@@ -4,31 +4,63 @@ const Arweave = require('../adapters/arweave/arweave');
 const leveldown = require('leveldown');
 const db = levelup(leveldown(__dirname + '/localKOIIDB'));
 const Data = require('../model/data');
+const { namespaceWrapper } = require('../namespaceWrapper');
+const { Keypair } = require('@solana/web3.js'); // TEST For local testing only
 
 const credentials = {}; // arweave doesn't need credentials
 
-const run = async () => { 
-    let query = "web3"; // the query our twitter search will use
+const run = async () => {
+  // Load node's keypair from the JSON file
+  // const keypair = await namespaceWrapper.getSubmitterAccount();
 
-    let dataDb = new Data('arweaveNodes', db);
+  // get Round
+  // const round = await namespaceWrapper.getRound();
 
-    let options = {
-        maxRetry : 3, 
-        query : query
-    }
-    
-    const adapter = new Arweave(credentials, options.maxRetry, dataDb, "txidhere");
+  // TEST ROUND
+  let round = 1000;
 
-    const gatherer = new Gatherer(dataDb, adapter, options);
+  // TEST For local testing, hardcode the keypair
+  const keypair = Keypair.generate();
 
-    // run a gatherer to get 100 items
-    let results = await gatherer.gather(100);
+  let query = 'web3'; // the query our twitter search will use
 
-    // TODO - add a test to check that the db has been populated with the correct data
-    gatherer.getList().then((list) => {
-        console.log(list);
-    })
+  let dataDb = new Data('arweaveNodes', db);
 
-}
+  let options = {
+    maxRetry: 3,
+    query: query,
+  };
+
+  const adapter = new Arweave(
+    credentials,
+    options.maxRetry,
+    dataDb,
+    'txidhere',
+  );
+
+  const gatherer = new Gatherer(dataDb, adapter, options);
+
+  // run a gatherer to get 100 items
+  let result = await gatherer.gather(100);
+
+  const messageUint8Array = new Uint8Array(Buffer.from(result));
+
+  const signedMessage = nacl.sign(messageUint8Array, keypair.secretKey);
+  const signature = signedMessage.slice(0, nacl.sign.signatureLength);
+
+  const submission_value = {
+    proofs: result,
+    node_publicKey: keypair.publicKey,
+    node_signature: bs58.encode(signature),
+  };
+
+  // TODO test proof db
+  await dataDb.addProof(round, submission_value);
+
+  // TODO - add a test to check that the db has been populated with the correct data
+  gatherer.getList().then(list => {
+    console.log(list);
+  });
+};
 
 run();

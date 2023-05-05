@@ -69,6 +69,15 @@ data.getPendingList()
     console.error('Get pending items test failed:', err);
   });
 
+// TEST delete itme
+// data.deleteItem("pending:test:5")
+//   .then((list) => {
+//     console.log('Get pending items test passed');
+//   })
+//   .catch((err) => {
+//     console.error('Get pending items test failed:', err);
+//   });
+
 // // Test getting pending item
 // data.getPendingItem(5)
 //   .then((item) => {

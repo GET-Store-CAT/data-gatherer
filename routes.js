@@ -16,10 +16,61 @@ router.use((req, res, next) => {
 // Route to get task state
 router.get('/taskState', async (req, res) => {
   const state = await namespaceWrapper.getTaskState();
-  console.log("TASK STATE", state);
+  console.log('TASK STATE', state);
 
-  res.status(200).json({ taskState: state })
-})
+  res.status(200).json({ taskState: state });
+});
+
+// Get Logs
+router.get('/logs', async (req, res) => {
+  const logs = fs.readFileSync('./namespace/logs.txt', 'utf8');
+  res.status(200).send(logs);
+});
+
+// endpoint for specific healthy arweave node by id
+router.get('/arweave/healthy/get/:id', async (req, res) => {
+  const { id } = req.params;
+  let healthyItem = await data.getHealthyItem(id);
+  healthyItem = healthyItem || '[]';
+  return res.status(200).send(healthyItem);
+});
+
+// endpoint for healthy arweave nodes list
+router.get('/arweave/healthy/list', async (req, res) => {
+  let healthyList = await data.getHealthyList();
+  healthyList = healthyList || '[]';
+  return res.status(200).send(healthyList);
+});
+
+// endpoint for specific pending arweave node by id
+router.get('/arweave/pending/get/:id', async (req, res) => {
+  const { id } = req.params;
+  let pendingItem = await data.getPendingItem(id);
+  pendingItem = pendingItem || '[]';
+  return res.status(200).send(pendingItem);
+});
+
+// endpoint for pending arweave nodes list
+router.get('/arweave/pending/list', async (req, res) => {
+  let pendingList = await data.getPendingList();
+  pendingList = pendingList || '[]';
+  return res.status(200).send(pendingList);
+});
+
+// endpoint for specific proof by round
+router.get('arweave/proof/get/:round', async (req, res) => {
+  const { round } = req.params;
+  let proof = await data.getProof(round);
+  proof = proof || '[]';
+  return res.status(200).send(proof);
+});
+
+// endpoint for proof list
+router.get('arweave/proof/list', async (req, res) => {
+  let proofList = await data.getProofList();
+  proofList = proofList || '[]';
+  return res.status(200).send(proofList);
+});
 
 // Route to fetch a user by ID
 router.get('/:id', (req, res) => {

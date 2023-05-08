@@ -1,6 +1,7 @@
 const { namespaceWrapper } = require('./namespaceWrapper');
 const crypto = require('crypto');
 const arweave_task = require('./arweave_task');
+const arweave_validate = require('./arweave_validate');
 const Data = require('./model/data');
 const { Keypair } = require('@solana/web3.js'); // TEST For local testing only
 
@@ -175,8 +176,8 @@ class CoreLogic {
   async validateNode(submission_value, round) {
     console.log('Received submission_value', submission_value, round);
 
-    // import the linktree validate module
-    const vote = await linktree_validate(submission_value, round);
+    // import the arweave scrapping validate module
+    const vote = await arweave_validate(submission_value, round);
     console.log('Vote', vote);
     return vote;
   }

@@ -1,38 +1,49 @@
 const { namespaceWrapper } = require('./namespaceWrapper');
 const crypto = require('crypto');
+const arweave_task = require('./arweave_task');
+const Data = require('./model/data');
+const { Keypair } = require('@solana/web3.js'); // TEST For local testing only
 
+const db = new Data('arweaveNodes', db);
 class CoreLogic {
   async task() {
-    // Write the logic to do the work required for submitting the values and optionally store the result in levelDB
+    
+    // run arweave web scrapping
+    console.log('********Arweave Webscrapiing started**********');
 
-    // Below is just a sample of work that a task can do
+    // const round = await namespaceWrapper.getRound();
 
-    try {
-      const x = Math.random().toString(); // generate random number and convert to string
-      const cid = crypto.createHash('sha1').update(x).digest('hex'); // convert to CID
-      console.log('HASH:', cid);
+    // TEST For only testing purposes:
+    const round = 1000
+    
+    const proof_cid = await arweave_task();
 
-      // fetching round number to store work accordingly
-
-      if (cid) {
-        await namespaceWrapper.storeSet('cid', cid); // store CID in levelDB
-      }
-    } catch (err) {
-      console.log('ERROR IN EXECUTING TASK', err);
+    if (proof_cid) {
+      await db.addProof(round, proof_cid); // store CID in levelDB
+      console.log('Node Proof CID stored in round', round)
+    } else {
+      console.log('CID NOT FOUND');
     }
+
+    console.log('********Arweave Webscrapiing ended**********');
+
+    return proof_cid
   }
+
   async fetchSubmission() {
-    // Write the logic to fetch the submission values here and return the cid string
 
-    // fetching round number to store work accordingly
+    console.log('**********IN FETCH SUBMISSION**********');
 
-    console.log('IN FETCH SUBMISSION');
+    // TEST For only testing purposes:
+    const round = 1000
 
-    // The code below shows how you can fetch your stored value from level DB
+    // const round = await namespaceWrapper.getRound();
+    
+    const proof_cid = await db.getProof(round - 1); // retrieves the cid
+    console.log('Linktree proofs CID', proof_cid, "in round", round - 1);
 
-    const cid = await namespaceWrapper.storeGet('cid'); // retrieves the cid
-    console.log('CID', cid);
-    return cid;
+    
+    return proof_cid;
   }
 
   async generateDistributionList(round, _dummyTaskState) {

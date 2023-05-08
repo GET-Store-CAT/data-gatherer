@@ -1,11 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const Data = require('./model/data');
-const db = levelup(leveldown(__dirname + '/localKOIIDB'));
+const dataDb = require('./helpers/db');
 const fs = require('fs');
 const { namespaceWrapper } = require('./namespaceWrapper');
-
-let data = new Data('arweaveNodes', db);
 
 // Middleware to log incoming requests
 router.use((req, res, next) => {
@@ -30,14 +27,14 @@ router.get('/logs', async (req, res) => {
 // endpoint for specific healthy arweave node by id
 router.get('/arweave/healthy/get/:id', async (req, res) => {
   const { id } = req.params;
-  let healthyItem = await data.getHealthyItem(id);
+  let healthyItem = await dataDb.getHealthyItem(id);
   healthyItem = healthyItem || '[]';
   return res.status(200).send(healthyItem);
 });
 
 // endpoint for healthy arweave nodes list
 router.get('/arweave/healthy/list', async (req, res) => {
-  let healthyList = await data.getHealthyList();
+  let healthyList = await dataDb.getHealthyList();
   healthyList = healthyList || '[]';
   return res.status(200).send(healthyList);
 });
@@ -45,14 +42,14 @@ router.get('/arweave/healthy/list', async (req, res) => {
 // endpoint for specific pending arweave node by id
 router.get('/arweave/pending/get/:id', async (req, res) => {
   const { id } = req.params;
-  let pendingItem = await data.getPendingItem(id);
+  let pendingItem = await dataDb.getPendingItem(id);
   pendingItem = pendingItem || '[]';
   return res.status(200).send(pendingItem);
 });
 
 // endpoint for pending arweave nodes list
 router.get('/arweave/pending/list', async (req, res) => {
-  let pendingList = await data.getPendingList();
+  let pendingList = await dataDb.getPendingList();
   pendingList = pendingList || '[]';
   return res.status(200).send(pendingList);
 });
@@ -60,28 +57,16 @@ router.get('/arweave/pending/list', async (req, res) => {
 // endpoint for specific proof by round
 router.get('arweave/proof/get/:round', async (req, res) => {
   const { round } = req.params;
-  let proof = await data.getProof(round);
+  let proof = await dataDb.getProof(round);
   proof = proof || '[]';
   return res.status(200).send(proof);
 });
 
 // endpoint for proof list
 router.get('arweave/proof/list', async (req, res) => {
-  let proofList = await data.getProofList();
+  let proofList = await dataDb.getProofList();
   proofList = proofList || '[]';
   return res.status(200).send(proofList);
-});
-
-// Route to fetch a user by ID
-router.get('/:id', (req, res) => {
-  const userId = parseInt(req.params.id, 10);
-  const user = users.find(u => u.id === userId);
-
-  if (user) {
-    res.json(user);
-  } else {
-    res.status(404).send('User not found');
-  }
 });
 
 module.exports = router;

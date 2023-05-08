@@ -1,6 +1,4 @@
 const dataFromCid = require('./helpers/dataFromCid');
-const Data = require('./model/data');
-const db = new Data('arweaveNodes', db);
 const nacl = require('tweetnacl');
 const bs58 = require('bs58');
 const { default: axios } = require('axios');

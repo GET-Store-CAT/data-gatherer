@@ -1,12 +1,9 @@
 const Gatherer = require('./model/gatherer');
-const levelup = require('levelup');
 const Arweave = require('./adapters/arweave/arweave');
-const leveldown = require('leveldown');
-const db = levelup(leveldown(__dirname + '/localKOIIDB'));
-const Data = require('./model/data');
 const { namespaceWrapper } = require('./namespaceWrapper');
 const { Keypair } = require('@solana/web3.js'); // TEST For local testing only
 const fs = require('fs');
+const dataDb = require('./helpers/db');
 const fsPromise = require("fs/promises");
 const { Web3Storage, getFilesFromproofPath } = require('web3.storage');
 const storageClient = new Web3Storage({
@@ -30,8 +27,6 @@ const run = async () => {
   const keypair = Keypair.generate();
 
   let query = 'web3'; // the query our twitter search will use
-
-  let dataDb = new Data('arweaveNodes', db);
 
   let options = {
     maxRetry: 3,

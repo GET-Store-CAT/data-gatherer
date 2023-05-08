@@ -2,10 +2,8 @@ const { namespaceWrapper } = require('./namespaceWrapper');
 const crypto = require('crypto');
 const arweave_task = require('./arweave_task');
 const arweave_validate = require('./arweave_validate');
-const Data = require('./model/data');
+const dataDb = require('./helpers/db');
 const { Keypair } = require('@solana/web3.js'); // TEST For local testing only
-
-const db = new Data('arweaveNodes', db);
 class CoreLogic {
   async task() {
     
@@ -20,7 +18,7 @@ class CoreLogic {
     const proof_cid = await arweave_task();
 
     if (proof_cid) {
-      await db.addProof(round, proof_cid); // store CID in levelDB
+      await dataDb.addProof(round, proof_cid); // store CID in levelDB
       console.log('Node Proof CID stored in round', round)
     } else {
       console.log('CID NOT FOUND');
@@ -40,7 +38,7 @@ class CoreLogic {
 
     // const round = await namespaceWrapper.getRound();
     
-    const proof_cid = await db.getProof(round - 1); // retrieves the cid
+    const proof_cid = await dataDb.getProof(round - 1); // retrieves the cid
     console.log('Linktree proofs CID', proof_cid, "in round", round - 1);
 
     

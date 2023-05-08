@@ -2,10 +2,13 @@
 const coreLogic = require("./coreLogic");
 const namespaceWrapper = require("./namespaceWrapper");
 
-// TEST Set round
-// let round = 1000
-const round = await namespaceWrapper.getRound();
+
 const localShim = async () => {
+
+  // TEST Set round
+// let round = 1000
+  const round = await namespaceWrapper.getRound();
+  
   /* GUIDE TO CALLS K2 FUNCTIONS MANUALLY
 
   If you wish to do the development by avoiding the timers then you can do the intended calls to K2 

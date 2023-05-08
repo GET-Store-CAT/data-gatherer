@@ -1,10 +1,11 @@
 const { coreLogic } = require('./coreLogic');
 const { app } = require('./init');
+const express = require('express');
 const {
   namespaceWrapper,
   taskNodeAdministered,
 } = require('./namespaceWrapper');
-const localShim = require('./k2-local-debugger'); // TEST to enable testing with K2 without round timers, enable this line and line 38
+// const localShim = require('./k2-local-debugger'); // TEST to enable testing with K2 without round timers, enable this line and line 38
 const routes = require('./routes');
 const logOverwrite = require('./log-overwrite');
 

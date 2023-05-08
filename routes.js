@@ -1,17 +1,25 @@
 const express = require('express');
 const router = express.Router();
+const Data = require('./model/data');
+const db = levelup(leveldown(__dirname + '/localKOIIDB'));
+const fs = require('fs');
+const { namespaceWrapper } = require('./namespaceWrapper');
 
-// Sample data
-const users = [
-  { id: 1, name: 'Alice' },
-  { id: 2, name: 'Bob' },
-  { id: 3, name: 'Charlie' },
-];
+let data = new Data('arweaveNodes', db);
 
-// Route to fetch all users
-router.get('/', (req, res) => {
-  res.json(users);
+// Middleware to log incoming requests
+router.use((req, res, next) => {
+  console.log(`Incoming ${req.method} request to ${req.originalUrl}`);
+  next();
 });
+
+// Route to get task state
+router.get('/taskState', async (req, res) => {
+  const state = await namespaceWrapper.getTaskState();
+  console.log("TASK STATE", state);
+
+  res.status(200).json({ taskState: state })
+})
 
 // Route to fetch a user by ID
 router.get('/:id', (req, res) => {

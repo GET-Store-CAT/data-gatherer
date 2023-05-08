@@ -4,8 +4,14 @@ const {
   namespaceWrapper,
   taskNodeAdministered,
 } = require('./namespaceWrapper');
+const localShim = require('./k2-local-debugger'); // TEST to enable testing with K2 without round timers, enable this line and line 38
+const routes = require('./routes');
+const logOverwrite = require('./log-overwrite');
 
 async function setup() {
+  // Setup log overwriting
+  logOverwrite();
+
   console.log('setup function called');
   // Run default setup
   await namespaceWrapper.defaultTaskSetup();
@@ -29,23 +35,16 @@ async function setup() {
     }
   });
 
+  // localShim(); // TEST enable this to run the localShim for testing with K2 without timers
 }
 
+// Run main task
 if (taskNodeAdministered) {
   setup();
 }
+
+// Run server
 if (app) {
-  //  Write your Express Endpoints here.
-  //  For Example
-  //  app.post('/accept-cid', async (req, res) => {})
-
-  // Sample API that return your task state
-
-  app.get('/taskState', async (req, res) => {
-    const state = await namespaceWrapper.getTaskState();
-    console.log('TASK STATE', state);
-
-    res.status(200).json({ taskState: state });
-  });
-  app.use('/api/', require('./routes') );
+  app.use(express.json());
+  app.use('/', routes)
 }

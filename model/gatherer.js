@@ -127,9 +127,9 @@ class Gatherer {
 
   // TODO - test this one
   uploadIPFS = async function (data) {
-    const path = `./${this.name}/healthyList.json`;
+    const path = `./arweave/healthyList.json`;
 
-    if (!fs.existsSync(`/${this.name}`)) fs.mkdirSync(`/${this.name}`);
+    if (!fs.existsSync(`./arweave`)) fs.mkdirSync(`./arweave`);
 
     console.log('PATH', path);
 

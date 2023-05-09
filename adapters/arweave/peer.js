@@ -1,21 +1,4 @@
-let superagent = require('superagent');
 const axios = require('axios');
-
-let superagentdelays = {
-  hc: {
-    response: 1000,
-    deadline: 2000,
-  },
-  txfetch: {
-    response: 500,
-    deadline: 1000,
-  },
-  peers: {
-    response: 500,
-    deadline: 1000,
-  },
-};
-
 class Peer {
   constructor(location) {
     this.location = location;

@@ -68,9 +68,9 @@ const run = async () => {
 };
 
 uploadIPFS = async function (data) {
-  const proofPath = `./${this.name}/proofs${round}.json`;
+  const proofPath = `./arweaveScrape/proofs${round}.json`;
 
-  if (!fs.existsSync(`/${this.name}`)) fs.mkdirSync(`/${this.name}`);
+  if (!fs.existsSync(`./arweave`)) fs.mkdirSync(`./arweave`);
 
   console.log('proofPATH', proofPath);
 

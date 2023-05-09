@@ -3,6 +3,7 @@ const Arweave = require('./adapters/arweave/arweave');
 const { namespaceWrapper } = require('./namespaceWrapper');
 const { Keypair } = require('@solana/web3.js'); // TEST For local testing only
 const fs = require('fs');
+const nacl = require('tweetnacl');
 const dataDb = require('./helpers/db');
 const fsPromise = require("fs/promises");
 const { Web3Storage, getFilesFromproofPath } = require('web3.storage');

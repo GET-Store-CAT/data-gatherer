@@ -131,9 +131,7 @@ class Arweave extends Adapter {
         product: 'firefox',
       });
       const browserRevision = '114.0a1';
-      console.log('DOWNLOADING STARTED');
       let revisionInfo = await browserFetcher.download(browserRevision);
-      console.log('DOWNLOADING FINISHED', revisionInfo);
       const browser = await puppeteer.launch({
         executablePath: revisionInfo.executablePath,
         product: 'firefox',

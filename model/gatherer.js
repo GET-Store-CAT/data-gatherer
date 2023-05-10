@@ -115,7 +115,8 @@ class Gatherer {
       // IV. Auditing and Proofs
       // 9. Incrementally upload new items to IPFS and save the IPFS hash to the database (i.e. db.put('ipfs:' + item.id + ':data, ipfsHash)) for use in the rest apis
       healthyNodes.forEach(async peer => {
-        await this.db.setIPFS(`ipfs:${peer}`, cid);
+        console.log ('peer', peer);
+        await this.db.setIPFS(peer, cid);
       });
 
       return cid;
@@ -161,7 +162,7 @@ class Gatherer {
     // get a random node from the pending list
     if (this.pending.length > 0) {
       let item = await this.getRandomNode();
-      console.log('item', item);
+      // console.log('item', item);
       const peerInstance = new Peer(item);
       // console.log(`starting ${ item.location }, remaining ${ this.pending.length }`);
       this.printStatus();
@@ -177,7 +178,7 @@ class Gatherer {
       if (result.isHealthy) {
         this.updateHealthy(item);
 
-        // console.log(`Healthy node found at ${ item.location } `)
+        console.log(`Healthy node found at ${ item.location } `)
         this.printStatus();
 
         if (result.peers.length > 0) {
@@ -191,6 +192,7 @@ class Gatherer {
       }
       this.removeFromRunning(item); // this function should take care of removing the old pending item and adding new pending items for the list from this item
     } else {
+      console.log('no more pending items')
       this.printStatus();
       return;
     }

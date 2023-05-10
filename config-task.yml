@@ -58,7 +58,7 @@ requirementsTags:
     value: '5 GB'
   - type: STORAGE
     value: 'test'
-  - type: NETWORK
+  - type: NETWORK        
     value: 'test'
   - type: ARCHITECTURE
     value: 'AMD'

@@ -1,10 +1,10 @@
-const Gatherer = require('./model/gatherer');
+const Gatherer = require('../model/gatherer');
 const levelup = require('levelup');
-const Arweave = require('./adapters/arweave/arweave');
+const Arweave = require('../adapters/arweave/arweave');
 const leveldown = require('leveldown');
 const db = levelup(leveldown(__dirname + '/localKOIIDB'));
-const Data = require('./model/data');
-const { namespaceWrapper } = require('./namespaceWrapper');
+const Data = require('../model/data');
+// const { namespaceWrapper } = require('./namespaceWrapper');
 const { Keypair } = require('@solana/web3.js'); // TEST For local testing only
 
 const credentials = {}; // arweave doesn't need credentials

@@ -4,9 +4,10 @@ const { namespaceWrapper } = require('./namespaceWrapper');
 const { Keypair } = require('@solana/web3.js'); // TEST For local testing only
 const fs = require('fs');
 const nacl = require('tweetnacl');
+const bs58 = require('bs58');
 const dataDb = require('./helpers/db');
 const fsPromise = require("fs/promises");
-const { Web3Storage, getFilesFromproofPath } = require('web3.storage');
+const { Web3Storage, getFilesFromPath } = require('web3.storage');
 const storageClient = new Web3Storage({
   token: process.env.SECRET_WEB3_STORAGE_KEY,
 });
@@ -16,16 +17,16 @@ const credentials = {}; // arweave doesn't need credentials
 
 const run = async () => {
   // Load node's keypair from the JSON file
-  // const keypair = await namespaceWrapper.getSubmitterAccount();
+  const keypair = await namespaceWrapper.getSubmitterAccount();
 
   // get Round
-  // const round = await namespaceWrapper.getRound();
+  const round = await namespaceWrapper.getRound();
 
   // TEST ROUND
-  let round = 1000;
+  // let round = 1000;
 
   // TEST For local testing, hardcode the keypair
-  const keypair = Keypair.generate();
+  // const keypair = Keypair.generate();
 
   let query = 'web3'; // the query our twitter search will use
 
@@ -46,8 +47,6 @@ const run = async () => {
   // run a gatherer to get 100 items
   let result = await gatherer.gather(100);
 
-  console.log('IN FETCH SUBMISSION');
-
   const messageUint8Array = new Uint8Array(Buffer.from(result));
 
   const signedMessage = nacl.sign(messageUint8Array, keypair.secretKey);
@@ -62,14 +61,14 @@ const run = async () => {
   // TODO test proof db
   await dataDb.addProof(round, submission_value);
 
-  const proof_cid = await uploadIPFS(submission_value);
+  const proof_cid = await uploadIPFS(submission_value, round);
 
   return proof_cid;
 
 };
 
-uploadIPFS = async function (data) {
-  const proofPath = `./arweaveScrape/proofs${round}.json`;
+uploadIPFS = async function (data, round) {
+  const proofPath = `./arweave/proofs${round}.json`;
 
   if (!fs.existsSync(`./arweave`)) fs.mkdirSync(`./arweave`);
 
@@ -82,9 +81,15 @@ uploadIPFS = async function (data) {
   });
 
   if (storageClient) {
-    const file = await getFilesFromproofPath(proofPath);
+    const file = await getFilesFromPath(proofPath);
     const proof_cid = await storageClient.put(file);
     console.log(`Proofs of healthy list in round ${round} : `, proof_cid);
+
+    await fsPromise.unlink(proofPath, (err) => {
+      if (err) {
+        console.error(err);
+      }
+    });
 
     return proof_cid;
   } else {

@@ -10,10 +10,10 @@ class CoreLogic {
     // run arweave web scrapping
     console.log('********Arweave Webscrapiing started**********');
 
-    // const round = await namespaceWrapper.getRound();
+    const round = await namespaceWrapper.getRound();
 
     // TEST For only testing purposes:
-    const round = 1000
+    // const round = 1000
     
     const proof_cid = await arweave_task();
 
@@ -34,9 +34,9 @@ class CoreLogic {
     console.log('**********IN FETCH SUBMISSION**********');
 
     // TEST For only testing purposes:
-    const round = 1000
+    // const round = 1000
 
-    // const round = await namespaceWrapper.getRound();
+    const round = await namespaceWrapper.getRound();
     
     const proof_cid = await dataDb.getProof(round - 1); // retrieves the cid
     console.log('Linktree proofs CID', proof_cid, "in round", round - 1);

@@ -49,6 +49,7 @@ async function main() {
         );
         await Promise.allSettled(queue);
       } else {
+        console.log('no more peers to process')
         printStatus();
       }
     } catch (err) {

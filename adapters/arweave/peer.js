@@ -1,4 +1,5 @@
 const axios = require('axios');
+const {URL} = require('url');
 class Peer {
   constructor(location) {
     this.location = location;
@@ -13,7 +14,7 @@ class Peer {
       return;
     }
     try {
-      // console.log('sending health check for ', this.location)
+      console.log('sending health check for ', this.location)
       const response = await axios.get(url, {
         timeout: 10000,
       });
@@ -24,7 +25,7 @@ class Peer {
       }
       // console.log('healthcheck completed')
     } catch (err) {
-      console.error("can't fetch " + this.location);
+      console.error("can't fetch " + this.location + err);
     }
     return;
   };
@@ -33,8 +34,9 @@ class Peer {
   // performs a full scan on a node
   // node: a crawler object must be passed in to allow new peers to be added
   fullScan = async function (peer, txid) {
-    console.log('checking ' + this.location);
-    let url = `http://${peer}/peers`;
+    peer = String(peer).replace(/"/g, ''); // Remove double quotes
+    // console.log('checking ' + peer);
+    let url = new URL(`http://${peer}/peers`);
     if (!this.isHealthy) await this.healthCheck(url);
 
     // console.log('moved past')

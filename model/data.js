@@ -255,6 +255,7 @@ class Data {
     return new Promise((resolve, reject) => {
       let options = {
         lt: `healthy:${this.name}~`,
+        gt: `healthy:${this.name}`,
         reverse: true,
         keys: true,
         values: true,
@@ -376,7 +377,7 @@ class Data {
     return new Promise((resolve, reject) => {
       try {
         this.db.del(key);
-        console.log('deleted item', key);
+        // console.log('deleted item', key);
         resolve(true);
       } catch (err) {
         console.error('Error in deleteItem', err);

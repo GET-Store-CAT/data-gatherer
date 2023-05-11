@@ -1,23 +1,23 @@
 #Provide the taskId if you are updating the task
-task_id: ''
+task_id: 'He6rtDFuvk4fTeqzc4oMz1p7mQPdYEHpwdyZGFvccW6c'
 # Name and desciption of your task
-task_name: 'Arweave-scrapping-task'
+task_name: 'Arweave-Scrapping'
 task_description: 'This task is to scrape Arweave and check valid nodes'
 
 # network value can be DEVELOPMENT , ARWEAVE or IPFS
-task_executable_network: 'DEVELOPMENT'
+task_executable_network: 'IPFS'
 
 # Provide your web3.storage key as it is needed for uploading your metadata
 secret_web3_storage_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweGY0ODYxMzAzOTdDNTY1QzlDYTRCOTUzZTA2RWQ4NUI4MGRBQzRkYTIiLCJpc3MiOiJ3ZWIzLXN0b3JhZ2UiLCJpYXQiOjE2NjYzNjU1OTk5MDMsIm5hbWUiOiJTb21hIn0.TU-KUFS9vjI9blN5dx6VsLLuIjJnpjPrxDHBvjXQUxw'
 
 # Path to your executable webpack if the selected network is IPFS otherwise leave blank
-task_audit_program: ''
+task_audit_program: '/home/soma/code-ie/data-gatherer/dist/main.js'
 
 # Provide your transaction ID in case of ARWEAVE and in case of DEVELOPMENT give your executable name as main otherwise leave blank
 task_audit_program_id: 'main'
 
 # Total round time of your task : it must be given in slots and each slot is rougly equal to 4ms
-round_time: 600
+round_time: 5000
 
 audit_window: 200
 submission_window: 200
@@ -42,16 +42,13 @@ space: 3
 # To add more global variables and task variables, please refer the type,value,description format shown below
 
 author: 'Soma'
-description: 'Arweave-scrapping-task'
+description: 'Arweave-Scrapping'
 repositoryUrl: 'https://github.com/GET-Store-CAT/data-gatherer'
 imageUrl: 'https://bafybeia7anj5fgnstqlqwglehxoeq7yviczei3u24gvas7tjqrmt2g7e2m.ipfs.w3s.link/soma.jpeg'
 requirementsTags:
-  - type: GLOBAL_VARIABLE
-    value: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweGY0ODYxMzAzOTdDNTY1QzlDYTRCOTUzZTA2RWQ4NUI4MGRBQzRkYTIiLCJpc3MiOiJ3ZWIzLXN0b3JhZ2UiLCJpYXQiOjE2NjYzNjU1OTk5MDMsIm5hbWUiOiJTb21hIn0.TU-KUFS9vjI9blN5dx6VsLLuIjJnpjPrxDHBvjXQUxw'
-    description: 'used to connect web3.storage'
   - type: TASK_VARIABLE
-    value: 'SCAPING URL'
-    description: 'url from which you want to scrape'
+    value: SECRET_WEB3_STORAGE_KEY
+    description: 'used to connect web3.storage'
   - type: CPU
     value: '4-core'
   - type: RAM

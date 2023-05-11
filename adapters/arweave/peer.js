@@ -45,7 +45,7 @@ class Peer {
       await this.getPeers(url);
 
       // console.log('checking tx for ' + this.location)
-      await this.checkTx(txid);
+      await this.checkTx(peer, txid);
     }
 
     // console.log(this.peers)
@@ -55,13 +55,14 @@ class Peer {
 
   // CheckTx
   // Checks if a specific node has a given txId
-  checkTx = async function (txid) {
+  checkTx = async function (peer, txid) {
     if (!this.isHealthy) await this.healthCheck();
 
     if (this.isHealthy) {
       try {
+        let txurl = new URL(`http://${peer}/tx/${txid}`);
         // console.log('sending txid check for ', peerUrl)
-        const response = await axios.get(url, {
+        const response = await axios.get(txurl, {
           timeout: 10000,
         });
         // console.log('payload returned from ' + peerUrl, payload)

@@ -10,7 +10,7 @@ namespace/*
 config/*
 .env
 taskStateInfoKeypair.json
-localKOIIDB
+localKOIIDB.db
 my_test_db
 twitter-db
 healthy.txt

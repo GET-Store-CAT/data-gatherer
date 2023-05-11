@@ -1,7 +1,3 @@
-const levelup = require('levelup');
-const leveldown = require('leveldown');
-const Item = require('./item');
-
 class Data {
   constructor(name, db, data) {
     this.name = name;
@@ -14,17 +10,14 @@ class Data {
 
   // create a new item
   async create(item) {
-    return new Promise((resolve, reject) => {
-      this.db.put(this.createId(item.id), JSON.stringify(item), err => {
-        if (err) {
-          console.error('Error in create', err);
-          reject(err);
-        } else {
-          console.log('Created item', item.id);
-          resolve(item);
-        }
-      });
-    });
+    try {
+      let itemId = this.createId(item.id);
+      console.log({ itemId, item });
+      await this.db.insert({ itemId, item });
+    } catch (e) {
+      console.error(e.key, e.errorType);
+      return undefined;
+    }
   }
 
   // creates new database with received data
@@ -42,367 +35,216 @@ class Data {
     }
   }
   // returns item by id
-  async get(id) {
-    return new Promise((resolve, reject) => {
-      this.db.get(this.createId(id), (err, value) => {
-        if (err) {
-          // console.error("Error in getData get", err, id);
-          resolve(null);
-        } else {
-          resolve(JSON.parse(value || '[]'));
-        }
-      });
-    });
+  async getItem(item) {
+    let itemId = this.createId(item);
+    try {
+      const resp = await this.db.findOne({ itemId });
+      if (resp) {
+        return resp.item;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
   }
 
   // return items by name
   async getList(options) {
-    // if no options supplied, default to a list of stored items by their keys
-    if (!options)
-      options = {
-        lt: `${this.name}~`,
-        reverse: true,
-        keys: true,
-        values: true,
-      };
-    return new Promise((resolve, reject) => {
-      let dataStore = [];
-      this.db
-        .createReadStream(options)
-        .on('data', function (data) {
-          console.log(data.key.toString(), '=', data.value.toString());
-          dataStore.push({
-            key: data.key.toString(),
-            value: data.value.toString(),
-          });
-        })
-        // TODO - add error handling
-        .on('error', function (err) {
-          console.log('Something went wrong in read Stream!', err);
-          reject(err);
-        })
-        .on('close', function () {
-          console.log('Stream closed');
-        })
-        .on('end', function () {
-          console.log('Stream ended');
-          resolve(dataStore);
-        });
-    });
+    const itemListRaw = await this.db.find({ item: { $exists: true } });
+    let itemList = itemListRaw.map(itemList => itemList.item);
+    return itemList;
   }
 
   // create pending item
-  addPendingItem(id, value) {
-    return new Promise((resolve, reject) => {
-      this.db.put(this.createPendingId(id), JSON.stringify(value), err => {
-        if (err) {
-          console.error('Error in addPendingItem', err);
-          reject(err);
-        } else {
-          console.log('added pending item', id);
-          resolve(true);
-        }
-      });
-    });
+  async addPendingItem(id, value) {
+    let pendingId = this.createPendingId(id);
+    let pendingItem = 'pending:' + JSON.stringify(value);
+    try {
+      this.db.insert({ pendingId, pendingItem });
+      console.log('added pending item', id);
+      return true;
+    } catch (err) {
+      console.error('Error in addPendingItem', err.errorType);
+      return undefined;
+    }
   }
 
   // get pending item
-  getPendingItem(id) {
-    return new Promise((resolve, reject) => {
-      this.db.get(this.createPendingId(id), (err, value) => {
-        if (err) {
-          console.error('Error in getData get', err, id);
-          resolve(null);
-        } else {
-          resolve(JSON.parse(value || '[]'));
-        }
-      });
-    });
+  async getPendingItem(id) {
+    let pendingId = this.createPendingId(id);
+    try {
+      const resp = await this.db.findOne({ pendingId });
+      if (resp) {
+        return resp.pendingItem;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
   }
 
   // get pending item List
-  getPendingList(limit) {
-    return new Promise((resolve, reject) => {
-      let dataStore = [];
-      let options = {
-        gt: `pending:${this.name}`,
-        lt: `pending:${this.name}~`,
-        reverse: true,
-        keys: true,
-        values: true,
-      };
-      if (limit) options.limit = limit;
-
-      this.db
-        .createReadStream(options)
-        .on('data', function (data) {
-          console.log(data.key.toString(), '=', data.value.toString());
-          dataStore.push(JSON.parse(data.value.toString()));
-
-          // check if the limit has been reached
-          if (limit && dataStore.length >= limit) {
-            console.log('limit reached');
-            this.destroy(); // TODO - test this
-          }
-        })
-        .on('error', function (err) {
-          console.log('Oh my!', err);
-          reject(err);
-        })
-        .on('close', function () {
-          console.log('Stream closed');
-        })
-        .on('end', function () {
-          console.log('Stream ended');
-          resolve(dataStore);
-        });
+  async getPendingList() {
+    const pendingListRaw = await this.db.find({
+      pendingItem: { $exists: true },
     });
+    let pendingList = pendingListRaw.map(pendingList =>
+      JSON.parse(pendingList.pendingItem.replace('pending:', '')),
+    );
+    return pendingList;
   }
 
   // add running item
-  addRunningItem(id, value) {
-    return new Promise((resolve, reject) => {
-      this.db.put(this.createRunningId(id), JSON.stringify(value), err => {
-        if (err) {
-          console.error('Error in addRunningItem', err);
-          reject(err);
-        } else {
-          console.log('added running item', id);
-          resolve(true);
-        }
-      });
-    });
+  async addRunningItem(id, value) {
+    let runningId = this.createRunningId(id);
+    let runningItem = 'running:' + JSON.stringify(value);
+    try {
+      this.db.insert({ runningId, runningItem });
+      console.log('added running item', id);
+      return true;
+    } catch (err) {
+      console.error('Error in addrunningItem', err.errorType);
+      return undefined;
+    }
   }
 
   // get running item
-  getRunningItem(id) {
-    return new Promise((resolve, reject) => {
-      this.db.get(this.createRunningId(id), (err, value) => {
-        if (err) {
-          console.error('Error in getData get', err, id);
-          resolve(null);
-        } else {
-          resolve(JSON.parse(value || '[]'));
-        }
-      });
-    });
+  async getRunningItem(id) {
+    let runningId = this.createRunningId(id);
+    try {
+      const resp = await this.db.findOne({ runningId });
+      if (resp) {
+        return resp.runningItem;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
   }
 
   // get running item List
-  getRunningList(limit) {
-    let runningStore = [];
-    return new Promise((resolve, reject) => {
-      let options = {
-        lt: `running:${this.name}~`,
-        reverse: true,
-        keys: true,
-        values: true,
-      };
-      if (limit) options.limit = limit;
-      this.db
-        .createReadStream(options)
-        .on('data', function (data) {
-          console.log(data.key.toString(), '=', data.value.toString());
-          runningStore.push(JSON.parse(data.value.toString()));
-          // check if the limit has been reached
-        })
-        .on('error', function (err) {
-          console.log('Oh my!', err);
-          reject(err);
-        })
-        .on('close', function () {
-          console.log('Stream closed');
-        })
-        .on('end', function () {
-          console.log('Stream ended');
-          resolve(runningStore);
-        });
-    });
+  async getRunningList() {
+    const runningListRaw = this.db.find({ runningItem: { $exists: true } });
+    let runningList = runningListRaw.map(runningList =>
+      JSON.parse(runningList.runningItem.replace('running:', '')),
+    );
+    return runningList;
   }
 
   // add healthy item
-  addHealthyItem(id, value) {
-    return new Promise((resolve, reject) => {
-      this.db.put(this.createHealthyId(id), JSON.stringify(value), err => {
-        if (err) {
-          console.error('Error in addHealthyItem', err);
-          reject(err);
-        } else {
-          console.log('added healthy item', id);
-          resolve(true);
-        }
-      });
-    });
+  async addHealthyItem(id, value) {
+    let healthyId = this.createHealthyId(id);
+    let healthyItem = 'healthy:' + JSON.stringify(value);
+    try {
+      this.db.insert({ healthyId, healthyItem });
+      console.log('added healthy item', id);
+      return true;
+    } catch (err) {
+      console.error('Error in addHealthyItem', err.errorType);
+      return undefined;
+    }
   }
 
   // get healthy item
-  getHealthyItem(id) {
-    return new Promise((resolve, reject) => {
-      this.db.get(this.createHealthyId(id), (err, value) => {
-        if (err) {
-          console.error('Error in getData get', err, id);
-          resolve(null);
-        } else {
-          resolve(JSON.parse(value || '[]'));
-        }
-      });
-    });
+  async getHealthyItem(id) {
+    let healthyId = this.createHealthyId(id);
+    try {
+      const resp = await this.db.findOne({ healthyId });
+      if (resp) {
+        return resp.healthyItem;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
   }
 
   // get healthy item List
-  getHealthyList(limit) {
-    let healthyStore = [];
-    return new Promise((resolve, reject) => {
-      let options = {
-        lt: `healthy:${this.name}~`,
-        gt: `healthy:${this.name}`,
-        reverse: true,
-        keys: true,
-        values: true,
-      };
-      if (limit) options.limit = limit;
-      this.db
-        .createReadStream(options)
-        .on('data', function (data) {
-          console.log(data.key.toString(), '=', data.value.toString());
-          healthyStore.push(JSON.parse(data.value.toString()));
-          // TODO: check if the limit has been reached
-        })
-        .on('error', function (err) {
-          console.log('Oh my!', err);
-          reject(err);
-        })
-        .on('close', function () {
-          console.log('Stream closed');
-        })
-        .on('end', function () {
-          console.log('Stream ended');
-          resolve(healthyStore);
-        });
-    });
+  getHealthyList() {
+    const healthyListRaw = this.db.find({ healthyItem: { $exists: true } });
+    let healthyList = healthyListRaw.map(healthyList =>
+      JSON.parse(healthyList.healthyItem.replace('healthy:', '')),
+    );
+    return healthyList;
   }
 
   // add IPFS to db
-  setIPFS(id, cid) {
-    return new Promise((resolve, reject) => {
-      this.db.put(`ipfs:${id}`, cid, err => {
-        if (err) {
-          console.error('Error in setIPFS', err);
-          reject(err);
-        } else {
-          console.log('added ipfs', id);
-          resolve(true);
-        }
-      });
-    });
+  async setIPFS(id, cid) {
+    let healthyId = id;
+    try {
+      this.db.insert({ healthyId, cid });
+      console.log('added IPFS', id);
+      return true;
+    } catch (err) {
+      console.error('Error in setIPFS', err.errorType);
+      return undefined;
+    }
   }
 
   // get IPFS from db
-  getIPFS(id) {
-    return new Promise((resolve, reject) => {
-      this.db.get(`ipfs:${id}`, (err, value) => {
-        if (err) {
-          console.error('Error in getIPFS', err, id);
-          resolve(null);
-        } else {
-          resolve(value);
-        }
-      });
-    });
+  async getIPFS(id) {
+    let healthyId = id;
+    try {
+      const resp = await this.db.findOne({ healthyId });
+      if (resp) {
+        return resp.cid;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
   }
 
   // add proof to db by round
-  addProof(round, proof) {
-    return new Promise((resolve, reject) => {
-      this.db.put(`${this.name}:proof:${round}`, JSON.stringify(proof), err => {
-        if (err) {
-          console.error('Error in addProof', err);
-          reject(err);
-        } else {
-          console.log('added proof', round);
-          resolve(true);
-        }
-      });
-    });
+  async addProof(round, proofItem) {
+    let proof = `${this.name}:proof:${round}`;
+    try {
+      this.db.insert({ proof, proofItem });
+      console.log('added proof', round);
+      return true;
+    } catch (err) {
+      console.error('Error in addProof', err.errorType);
+      return undefined;
+    }
   }
 
   // get proof by round
-  getProof(round) {
-    return new Promise((resolve, reject) => {
-      this.db.get(`${this.name}:proof:${round}`, (err, value) => {
-        if (err) {
-          console.error('Error in getProof', err, round);
-          resolve(null);
-        } else {
-          resolve(JSON.parse(value || '[]'));
-        }
-      });
-    });
+  async getProof(round) {
+    let proof = `${this.name}:proof:${round}`;
+    try {
+      const resp = await this.db.findOne({ proof });
+      if (resp) {
+        return resp.proofItem;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
   }
 
   // get list of proofs
   getProofList() {
-    return new Promise((resolve, reject) => {
-      let dataStore = [];
-      let options = {
-        gt: `${this.name}:proof:`,
-        lt: `${this.name}:proof:~`,
-        reverse: true,
-        keys: true,
-        values: true,
-      };
-
-      this.db
-        .createReadStream(options)
-        .on('data', function (data) {
-          console.log(data.key.toString(), '=', data.value.toString());
-          dataStore.push(JSON.parse(data.value.toString()));
-        })
-        .on('error', function (err) {
-          console.log('Oh my!', err);
-          reject(err);
-        })
-        .on('close', function () {
-          console.log('Stream closed');
-        })
-        .on('end', function () {
-          console.log('Stream ended');
-          resolve(dataStore);
-        });
-    });
-  }
-
-  // delte item
-  deleteItem(key) {
-    return new Promise((resolve, reject) => {
-      try {
-        this.db.del(key);
-        // console.log('deleted item', key);
-        resolve(true);
-      } catch (err) {
-        console.error('Error in deleteItem', err);
-        resolve(false);
-      }
-    });
-  }
-
-  // ? What is this for?
-  isDataItem(id) {
-    return new Promise((resolve, reject) => {
-      this.get(this.createId(id), (err, value) => {
-        if (err) {
-          console.error('Error in getData - dataItem ', err, id);
-          resolve(false);
-        } else {
-          resolve(true);
-        }
-      });
-    });
+    const proofListRaw = this.db.find({ proofItem: { $exists: true } });
+    let proofList = proofListRaw.map(proofList =>
+      JSON.parse(proofList.proofItem.replace('proof:', '')),
+    );
+    return proofList;
   }
 
   // Tool to create a new ID
   createId(id) {
-    console.log('Received DB name is', this.name);
     let newId = `${this.name}:${id}`;
     console.log('new id is ', newId);
     return newId;

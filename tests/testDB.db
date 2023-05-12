@@ -1,0 +1,4 @@
+{"healthyId":"222.239.92.29:1987","someField":"Some","_id":"YyGzPUdPpcUZgoPQ"}
+{"$$indexCreated":{"fieldName":"healthyId","unique":true,"sparse":true}}
+{"$$indexCreated":{"fieldName":"pendingId","unique":true,"sparse":true}}
+{"healthyId":"222.239.92.29:1988","someField":"Some","_id":"TuJmNStLgE6yNNBC"}

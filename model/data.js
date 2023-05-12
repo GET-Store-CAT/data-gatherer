@@ -12,7 +12,7 @@ class Data {
   async create(item) {
     try {
       let itemId = this.createId(item.id);
-      console.log({ itemId, item });
+      // console.log({ itemId, item });
       await this.db.insert({ itemId, item });
     } catch (e) {
       console.error(e.key, e.errorType);
@@ -59,14 +59,15 @@ class Data {
 
   // create pending item
   async addPendingItem(id, value) {
-    let pendingId = this.createPendingId(id);
-    let pendingItem = 'pending:' + JSON.stringify(value);
+    let pendingId = this.createPendingId(id.replace(/[\[\]"]/g, ''));
+    let pendingItem = 'pending:' + value.replace(/[\[\]"]/g, '');
     try {
-      this.db.insert({ pendingId, pendingItem });
-      console.log('added pending item', id);
+      // console.log({ pendingId, pendingItem });
+      await this.db.insert({ pendingId, pendingItem });
+      // console.log('added pending item', id);
       return true;
     } catch (err) {
-      console.error('Error in addPendingItem', err.errorType);
+      // console.error('Error in addPendingItem', err.errorType);
       return undefined;
     }
   }
@@ -93,7 +94,7 @@ class Data {
       pendingItem: { $exists: true },
     });
     let pendingList = pendingListRaw.map(pendingList =>
-      JSON.parse(pendingList.pendingItem.replace('pending:', '')),
+      pendingList.pendingItem.replace('pending:', '')
     );
     return pendingList;
   }
@@ -140,13 +141,13 @@ class Data {
   // add healthy item
   async addHealthyItem(id, value) {
     let healthyId = this.createHealthyId(id);
-    let healthyItem = 'healthy:' + JSON.stringify(value);
+    let healthyItem = 'healthy:' + value.replace(/[\[\]"]/g, '');
     try {
-      this.db.insert({ healthyId, healthyItem });
-      console.log('added healthy item', id);
+      await this.db.insert({ healthyId, healthyItem });
+      console.log('added healthy item', { healthyId, healthyItem });
       return true;
     } catch (err) {
-      console.error('Error in addHealthyItem', err.errorType);
+      console.error('Error in addHealthyItem', { healthyId, healthyItem }, err);
       return undefined;
     }
   }
@@ -178,10 +179,10 @@ class Data {
 
   // add IPFS to db
   async setIPFS(id, cid) {
-    let healthyId = id;
+    let ipfsId = id;
     try {
-      this.db.insert({ healthyId, cid });
-      console.log('added IPFS', id);
+      this.db.insert({ ipfsId, cid });
+      // console.log('added IPFS', id);
       return true;
     } catch (err) {
       console.error('Error in setIPFS', err.errorType);
@@ -243,38 +244,43 @@ class Data {
     return proofList;
   }
 
+  async deleteItem(docToDelete) {
+    console.log('deleting item', docToDelete)
+    await this.db.remove({ docToDelete });
+  }
+
   // Tool to create a new ID
   createId(id) {
     let newId = `${this.name}:${id}`;
-    console.log('new id is ', newId);
+    // console.log('new id is ', newId);
     return newId;
   }
 
   // Tool to create a pending ID
   createPendingId(id) {
-    console.log(id);
+    // console.log(id);
     let normalId = this.createId(id);
-    console.log('normal ID is ' + normalId);
+    // console.log('normal ID is ' + normalId);
     let pendingId = `pending:${normalId}`;
-    console.log('new pending ID: ', pendingId);
+    // console.log('new pending ID: ', pendingId);
     return pendingId;
   }
 
   // Tool to create a runnig ID
   createRunningId(id) {
-    console.log(id);
+    // console.log(id);
     let normalId = this.createId(id);
-    console.log('normal ID is ' + normalId);
+    // console.log('normal ID is ' + normalId);
     let runningId = `running:${normalId}`;
-    console.log('new running ID: ', runningId);
+    // console.log('new running ID: ', runningId);
     return runningId;
   }
 
   //Tool to create a healthy ID
   createHealthyId(id) {
-    console.log(id);
+    // console.log(id);
     let normalId = this.createId(id);
-    console.log('normal ID is ' + normalId);
+    // console.log('normal ID is ' + normalId);
     let healthyId = `healthy:${normalId}`;
     console.log('new healthy ID: ', healthyId);
     return healthyId;

@@ -1,22 +1,32 @@
 // Tests for the Data class
 const datadb = require('../helpers/db');
-const Item = require('../model/item');
 
-const testData = [
-  new Item({ id: 1, name: 'Item 1', description: 'First item' }),
-  new Item({ id: 2, name: 'Item 2', description: 'Second item' }),
-  new Item({ id: 3, name: 'Item 3', description: 'Third item' }),
-  new Item({ id: 4, name: 'Item 4', description: 'Fourth item' }),
-  new Item({ id: 5, name: 'Item 5', description: 'Fifth item' }),
-];
+// const Item = require('../model/item');
+
+// const testData = [
+//   new Item({ id: 1, name: 'Item 1', description: 'First item' }),
+//   new Item({ id: 2, name: 'Item 2', description: 'Second item' }),
+//   new Item({ id: 3, name: 'Item 3', description: 'Third item' }),
+//   new Item({ id: 4, name: 'Item 4', description: 'Fourth item' }),
+//   new Item({ id: 5, name: 'Item 5', description: 'Fifth item' }),
+// ];
 
 async function test() {
+
+  // TEST create healthy Item
+
+  
+    let healthyId = '222.239.92.29:1988';
+    let healthyItem = '222.239.92.29:1988'
+    await datadb.addHealthyItem(healthyId, healthyItem)
+  
 
 
   // Test creating an item
   // datadb
   //   .createItems(testData)
   //   .then(() => {
+    //lpFqWxqcFpBiElKo
   //     console.log('Create item test passed');
   //   })
   //   .catch(err => {
@@ -63,8 +73,8 @@ async function test() {
 
 
   // Test getting pending List
-  let pendinglist = await datadb.getPendingList()
-  console.log('pending list is ', pendinglist);
+  // let pendinglist = await datadb.getPendingList()
+  // console.log('pending list is ', pendinglist);
     
 
   // TEST delete itme

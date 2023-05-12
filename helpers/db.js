@@ -1,14 +1,28 @@
 const { namespaceWrapper } = require('../namespaceWrapper');
 const Data = require('../model/data');
 
-const db = namespaceWrapper.db
-  
-db.ensureIndex(
-    { fieldName: 'itemId', unique: true },
-    function (err) {
-      if (err) console.log(err.key, "already exist: ", err.errorTypee); // If there are duplicate values when you apply the unique index, you'll get an error.
-    },
-  );
+const db = namespaceWrapper.db;
+
+
+db.ensureIndex({ fieldName: 'healthyId', unique: true, sparse:true }, function (err) {
+  if (err) console.error('Index creation error:', err);
+});
+
+db.ensureIndex({ fieldName: 'pendingId', unique: true, sparse:true }, function (err) {
+  if (err) console.error('Index creation error:', err);
+});
+
+db.ensureIndex({ fieldName: 'runningId', unique: true, sparse:true }, function (err) {
+  if (err) console.error('Index creation error:', err);
+});
+
+db.ensureIndex({ fieldName: 'ipfsId', unique: true, sparse:true }, function (err) {
+  if (err) console.error('Index creation error:', err);
+});
+
+db.ensureIndex({ fieldName: 'proof', unique: true, sparse:true }, function (err) {
+  if (err) console.error('Index creation error:', err);
+});
 
 let dataDb = new Data('arweaveNodes', db);
 

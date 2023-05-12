@@ -14,18 +14,18 @@ class Peer {
       return;
     }
     try {
-      console.log('sending health check for ', this.location)
+      console.log('sending health check ', url.href)
       const response = await axios.get(url, {
         timeout: 10000,
       });
       console.log('payload received', response.data);
       if (response.data) {
         this.isHealthy = true;
-        this.peer.push(response.data);
+        this.peers.push(response.data);
       }
       // console.log('healthcheck completed')
     } catch (err) {
-      console.error("can't fetch " + this.location + err);
+      console.error("can't fetch " + url.href + " " + err);
     }
     return;
   };
@@ -34,8 +34,9 @@ class Peer {
   // performs a full scan on a node
   // node: a crawler object must be passed in to allow new peers to be added
   fullScan = async function (peer, txid) {
+    if (typeof peer !== 'string') peer = JSON.stringify(peer.location);
     peer = String(peer).replace(/"/g, ''); // Remove double quotes
-    // console.log('checking ' + peer);
+    console.log('checking ', peer);
     let url = new URL(`http://${peer}/peers`);
     if (!this.isHealthy) await this.healthCheck(url);
 

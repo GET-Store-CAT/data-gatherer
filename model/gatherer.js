@@ -162,23 +162,26 @@ class Gatherer {
     // get a random node from the pending list
     if (this.pending.length > 0) {
       let item = await this.getRandomNode();
+      if (typeof item !== 'string') item = JSON.stringify(item.location);
       // console.log('item', item);
       const peerInstance = new Peer(item);
       // console.log(`starting ${ item.location }, remaining ${ this.pending.length }`);
       this.printStatus();
+
       let result = await peerInstance.fullScan(item, this.txId);
       // remove from pending
-      await this.db.deleteItem(`pending:${item}`);
+      let pendingId = `pending:${item}`;
+      await this.db.deleteItem(pendingId);
       this.queried.push(item.location);
       if (result.isHealthy) {
-        console.log('received ', result);
+        console.log('received ', result.peers.length, ' peers');
         await this.adapter.storeListAsPendingItems(result.peers);
       }
 
       if (result.isHealthy) {
         this.updateHealthy(item);
 
-        console.log(`Healthy node found at ${ item.location } `)
+        console.log(`Healthy node found at ${ item } `)
         this.printStatus();
 
         if (result.peers.length > 0) {
@@ -244,6 +247,7 @@ class Gatherer {
   updateHealthy = async function (peerLocation) {
     if (!this.healthyNodes.includes(peerLocation)) {
       this.healthyNodes.push(peerLocation);
+      console.log('adding healthy node', peerLocation);
       this.db.addHealthyItem(peerLocation, peerLocation);
     }
     this.addToHealthy(peerLocation);

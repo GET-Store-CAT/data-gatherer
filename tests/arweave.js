@@ -1,9 +1,7 @@
 const Gatherer = require('../model/gatherer');
 const levelup = require('levelup');
 const Arweave = require('../adapters/arweave/arweave');
-const leveldown = require('leveldown');
-const db = levelup(leveldown(__dirname + '/localKOIIDB'));
-const Data = require('../model/data');
+const dataDb = require('../helpers/db');
 // const { namespaceWrapper } = require('./namespaceWrapper');
 const { Keypair } = require('@solana/web3.js'); // TEST For local testing only
 
@@ -23,8 +21,6 @@ const run = async () => {
   const keypair = Keypair.generate();
 
   let query = 'web3'; // the query our twitter search will use
-
-  let dataDb = new Data('arweaveNodes', db);
 
   let options = {
     maxRetry: 3,

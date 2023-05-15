@@ -1,5 +1,4 @@
 const Gatherer = require('../model/gatherer');
-const levelup = require('levelup');
 const Arweave = require('../adapters/arweave/arweave');
 const dataDb = require('../helpers/db');
 // const { namespaceWrapper } = require('./namespaceWrapper');
@@ -27,6 +26,8 @@ const run = async () => {
     query: query,
   };
 
+
+  await dataDb.intializeData();
   const adapter = new Arweave(
     credentials,
     options.maxRetry,

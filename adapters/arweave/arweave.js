@@ -143,7 +143,7 @@ class Arweave extends Adapter {
 
       const html = await page.content();
       const $ = cheerio.load(html);
-      console.log('html', html);
+      // console.log('html', html);
 
       $('body').each((i, el) => {
         let peers = $(el).find('pre').text();

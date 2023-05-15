@@ -1,7 +1,12 @@
+const { namespaceWrapper } = require('../namespaceWrapper');
+
 class Data {
   constructor(name, db, data) {
     this.name = name;
-    this.db = db;
+    // TODO: We can make a initilize async func and do all the async stuff in that which needs to be called after instantiating the class
+    namespaceWrapper.getDb().then((db)=>{
+      this.db = db;
+    })
     this.data = data;
     this.dbprefix = `${name} + ":"`;
     this.fullList = [];

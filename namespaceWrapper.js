@@ -5,19 +5,32 @@ const taskNodeAdministered = !!TASK_ID;
 const BASE_ROOT_URL = `http://localhost:${TASK_NODE_PORT}/namespace-wrapper`;
 const Datastore = require('nedb-promises');
 class NamespaceWrapper {
-  db;
+  #db;
 
   constructor() {
     if(taskNodeAdministered){
       this.getTaskLevelDBPath().then((path)=>{
-        this.db = Datastore.create(path);
+        this.#db = Datastore.create(path);
       }).catch((err)=>{
         console.error(err)
-        this.db = Datastore.create(`../namespace/${TASK_ID}/KOIILevelDB.db`);
+        this.#db = Datastore.create(`../namespace/${TASK_ID}/KOIILevelDB.db`);
       })
     }else{
-      this.db = Datastore.create('./localKOIIDB.db');
+      this.#db = Datastore.create('./localKOIIDB.db');
+      console.log("DB Initialized")
     }
+  }
+
+  async getDb(){
+
+    if(this.#db)return this.#db
+    try{
+      const path = await this.getTaskLevelDBPath()
+      this.#db = Datastore.create(path);
+    }catch(e){
+      this.#db = Datastore.create(`../namespace/${TASK_ID}/KOIILevelDB.db`);
+    }
+    return this.#db
   }
   /**
    * Namespace wrapper of storeGetAsync
@@ -25,7 +38,7 @@ class NamespaceWrapper {
    */
   async storeGet(key) {
     try {
-      const resp = await this.db.findOne({ key: key });
+      const resp = await this.#db.findOne({ key: key });
       if (resp) {
         return resp[key];
       } else {
@@ -44,7 +57,7 @@ class NamespaceWrapper {
   async storeSet(key, value) {
     try {
       console.log({ [key]: value, key });
-      await this.db.insert({ [key]: value, key });
+      await this.#db.insert({ [key]: value, key });
     } catch (e) {
       console.error(e);
       return undefined;

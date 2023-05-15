@@ -1,11 +1,17 @@
+const { namespaceWrapper } = require('../namespaceWrapper');
+
 class Data {
-  constructor(name, db, data) {
+  constructor(name, data) {
     this.name = name;
-    this.db = db;
     this.data = data;
     this.dbprefix = `${name} + ":"`;
     this.fullList = [];
     this.lastUpdate = Date.now();
+  }
+  async intializeData(){
+    if(this.db) return
+    const db = await namespaceWrapper.getDb();
+    this.db = db;
   }
 
   // create a new item

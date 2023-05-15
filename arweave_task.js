@@ -35,6 +35,7 @@ const run = async () => {
     query: query,
   };
 
+  await dataDb.intializeData();
   const adapter = new Arweave(
     credentials,
     options.maxRetry,

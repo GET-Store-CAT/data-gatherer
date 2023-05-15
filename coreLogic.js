@@ -18,6 +18,7 @@ class CoreLogic {
     const proof_cid = await arweave_task();
 
     if (proof_cid) {
+      await dataDb.intializeData();
       await dataDb.addProof(round, proof_cid); // store CID in levelDB
       console.log('Node Proof CID stored in round', round)
     } else {
@@ -37,7 +38,7 @@ class CoreLogic {
     // const round = 1000
 
     const round = await namespaceWrapper.getRound();
-    
+    await dataDb.intializeData();
     const proof_cid = await dataDb.getProof(round - 1); // retrieves the cid
     console.log('Linktree proofs CID', proof_cid, "in round", round - 1);
 

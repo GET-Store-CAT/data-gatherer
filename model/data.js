@@ -8,8 +8,8 @@ class Data {
     this.fullList = [];
     this.lastUpdate = Date.now();
   }
-  async intializeData(){
-    if(this.db) return
+  async intializeData() {
+    if (this.db) return;
     const db = await namespaceWrapper.getDb();
     this.db = db;
   }
@@ -99,8 +99,9 @@ class Data {
     const pendingListRaw = await this.db.find({
       pendingItem: { $exists: true },
     });
+    console.log('pendingListRaw is ', pendingListRaw);
     let pendingList = pendingListRaw.map(pendingList =>
-      pendingList.pendingItem.replace('pending:', '')
+      pendingList.pendingItem.replace('pending:', ''),
     );
     return pendingList;
   }
@@ -137,9 +138,11 @@ class Data {
 
   // get running item List
   async getRunningList() {
-    const runningListRaw = this.db.find({ runningItem: { $exists: true } });
+    const runningListRaw = await this.db.find({
+      runningItem: { $exists: true },
+    });
     let runningList = runningListRaw.map(runningList =>
-      JSON.parse(runningList.runningItem.replace('running:', '')),
+      runningList.runningItem.replace('running:', ''),
     );
     return runningList;
   }
@@ -175,10 +178,14 @@ class Data {
   }
 
   // get healthy item List
-  getHealthyList() {
-    const healthyListRaw = this.db.find({ healthyItem: { $exists: true } });
+  async getHealthyList() {
+    const healthyListRaw = await this.db.find({
+      healthyItem: { $exists: true },
+    });
+    console.log('healthyListRaw is ', healthyListRaw);
+    if (!healthyListRaw) return null;
     let healthyList = healthyListRaw.map(healthyList =>
-      JSON.parse(healthyList.healthyItem.replace('healthy:', '')),
+      healthyList.healthyItem.replace('healthy:', ''),
     );
     return healthyList;
   }
@@ -242,16 +249,16 @@ class Data {
   }
 
   // get list of proofs
-  getProofList() {
-    const proofListRaw = this.db.find({ proofItem: { $exists: true } });
+  async getProofList() {
+    const proofListRaw = await this.db.find({ proofItem: { $exists: true } });
     let proofList = proofListRaw.map(proofList =>
-      JSON.parse(proofList.proofItem.replace('proof:', '')),
+      proofList.proofItem.replace('proof:', ''),
     );
     return proofList;
   }
 
   async deleteItem(docToDelete) {
-    console.log('deleting item', docToDelete)
+    console.log('deleting item', docToDelete);
     await this.db.remove({ docToDelete });
   }
 

@@ -1,6 +1,9 @@
 // Tests for the Data class
 const datadb = require('../helpers/db');
 
+
+
+
 // const Item = require('../model/item');
 
 // const testData = [
@@ -12,13 +15,14 @@ const datadb = require('../helpers/db');
 // ];
 
 async function test() {
+  await datadb.intializeData();
 
   // TEST create healthy Item
 
   
-    let healthyId = '222.239.92.29:1988';
-    let healthyItem = '222.239.92.29:1988'
-    await datadb.addHealthyItem(healthyId, healthyItem)
+    // let healthyId = '222.239.92.29:1988';
+    // let healthyItem = '222.239.92.29:1988'
+    // await datadb.addHealthyItem(healthyId, healthyItem)
   
 
 
@@ -49,13 +53,8 @@ async function test() {
     
 
   // TEST get healthy list
-  // let healthyList = data.getHealthyList()
-  //   .then((list) => {
-  //     console.log('Get healthy list test passed');
-  //   })
-  //   .catch((err) => {
-  //     console.error('Get healthy list test failed:', err);
-  //   });
+  let healthyList = await datadb.getHealthyList()
+  console.log('healthy list is ', healthyList);
 
   // console.log('test list is ', testlist);
   //     console.log('Create item test passed');

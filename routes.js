@@ -55,7 +55,7 @@ router.get('/arweave/pending/list', async (req, res) => {
 });
 
 // endpoint for specific proof by round
-router.get('arweave/proof/get/:round', async (req, res) => {
+router.get('/arweave/proof/get/:round', async (req, res) => {
   const { round } = req.params;
   let proof = await dataDb.getProof(round);
   proof = proof || '[]';
@@ -63,7 +63,7 @@ router.get('arweave/proof/get/:round', async (req, res) => {
 });
 
 // endpoint for proof list
-router.get('arweave/proof/list', async (req, res) => {
+router.get('/arweave/proof/list', async (req, res) => {
   let proofList = await dataDb.getProofList();
   proofList = proofList || '[]';
   return res.status(200).send(proofList);

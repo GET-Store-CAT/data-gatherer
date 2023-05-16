@@ -27,7 +27,7 @@ class Peer {
 
       // console.log('healthcheck completed')
     } catch (err) {
-      console.error("can't fetch " + url.href + ' ' + err);
+      console.error("can't fetch " + url.href, err);
     }
     return;
   };
@@ -53,7 +53,7 @@ class Peer {
 
     // console.log(this.peers)
 
-    return this;
+    return this.containsTx;
   };
 
   // CheckTx
@@ -72,7 +72,6 @@ class Peer {
         const body = JSON.parse(response.data);
         if (body) {
           this.containsTx = true;
-          await this.adapter.storeListAsPendingItems(this.containsTx);
         }
       } catch (err) {
         // if (debug) console.error ("can't fetch " + this.location, err)

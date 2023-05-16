@@ -1,5 +1,5 @@
 const axios = require('axios');
-const {URL} = require('url');
+const { URL } = require('url');
 class Peer {
   constructor(location) {
     this.location = location;
@@ -14,18 +14,20 @@ class Peer {
       return;
     }
     try {
-      console.log('sending health check ', url.href)
+      console.log('sending health check ', url.href);
       const response = await axios.get(url, {
         timeout: 10000,
       });
       console.log('payload received', response.data);
-      if (response.data) {
+
+      if (response.data && response.data !== 'unknown') {
         this.isHealthy = true;
         this.peers.push(response.data);
       }
+
       // console.log('healthcheck completed')
     } catch (err) {
-      console.error("can't fetch " + url.href + " " + err);
+      console.error("can't fetch " + url.href + ' ' + err);
     }
     return;
   };

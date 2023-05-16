@@ -225,6 +225,11 @@ class Gatherer {
     if (!peers || peers.length < 1)
       throw new Error('You must pass an array of peer objects');
 
+      if (!Array.isArray(peers)) {
+        console.log('peers', peers);
+        throw new Error('You must pass an array of peer objects');
+      }  
+
     peers.forEach(peerUrl => {
       // a bit sloppy, but add the peer if it's not already in either the pending or past lists
       if (

@@ -27,7 +27,7 @@ class Peer {
 
       // console.log('healthcheck completed')
     } catch (err) {
-      console.error("can't fetch " + url.href, err);
+      console.error("can't fetch " + url.href + err);
     }
     return;
   };

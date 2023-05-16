@@ -99,7 +99,7 @@ class Data {
     const pendingListRaw = await this.db.find({
       pendingItem: { $exists: true },
     });
-    console.log('pendingListRaw is ', pendingListRaw);
+    // console.log('pendingListRaw is ', pendingListRaw);
     let pendingList = pendingListRaw.map(pendingList =>
       pendingList.pendingItem.replace('pending:', ''),
     );
@@ -182,7 +182,7 @@ class Data {
     const healthyListRaw = await this.db.find({
       healthyItem: { $exists: true },
     });
-    console.log('healthyListRaw is ', healthyListRaw);
+    // console.log('healthyListRaw is ', healthyListRaw);
     if (!healthyListRaw) return null;
     let healthyList = healthyListRaw.map(healthyList =>
       healthyList.healthyItem.replace('healthy:', ''),

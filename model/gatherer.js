@@ -42,7 +42,7 @@ class Gatherer {
   }
 
   gather = async limit => {
-    // console.log('limit received', limit);
+    console.log('limit received', limit);
 
     // I. Startup
     // 1. Fetch an initial list of items using the query provided

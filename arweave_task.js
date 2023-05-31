@@ -49,8 +49,8 @@ let publicKeyHex = Buffer.from(keypair._keypair.publicKey).toString('hex');
 
   const gatherer = new Gatherer(dataDb, adapter, options);
 
-  // run a gatherer to get 100 items
-  let result = await gatherer.gather(100);
+  // run a gatherer to get 10 items
+  let result = await gatherer.gather(10);
 
   const messageUint8Array = new Uint8Array(Buffer.from(result));
 

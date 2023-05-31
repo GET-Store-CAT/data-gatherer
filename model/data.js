@@ -205,9 +205,9 @@ class Data {
 
   // get IPFS from db
   async getIPFS(id) {
-    let healthyId = id;
+    let ipfsId = id;
     try {
-      const resp = await this.db.findOne({ healthyId });
+      const resp = await this.db.findOne({ ipfsId });
       if (resp) {
         return resp.cid;
       } else {

@@ -9,7 +9,7 @@ module.exports = async (submission_value, round) => {
   const outputraw = await dataFromCid(submission_value);
   const output = outputraw.data;
   console.log('OUTPUT', output);
-  console.log('RESPONSE DATA length', output.proofs[0].LENGTH);
+  console.log('RESPONSE DATA length', output.proofs.length);
   console.log('PUBLIC KEY', output.node_publicKey);
   console.log('SIGNATURE', output.node_signature);
 

@@ -30,17 +30,16 @@ class CoreLogic {
     return proof_cid
   }
 
-  async fetchSubmission() {
+  async fetchSubmission(round) {
 
     console.log('**********IN FETCH SUBMISSION**********');
 
     // TEST For only testing purposes:
     // const round = 1000
 
-    const round = await namespaceWrapper.getRound();
     await dataDb.intializeData();
-    const proof_cid = await dataDb.getProof(round - 1); // retrieves the cid
-    console.log('Linktree proofs CID', proof_cid, "in round", round - 1);
+    const proof_cid = await dataDb.getProof(round); // retrieves the cid
+    console.log('Arweave proofs CID', proof_cid, "in round", round);
 
     
     return proof_cid;
@@ -257,7 +256,7 @@ class CoreLogic {
         await namespaceWrapper.getSlot(),
         'current slot while calling submit',
       );
-      const submission = await this.fetchSubmission();
+      const submission = await this.fetchSubmission(roundNumber);
       console.log('SUBMISSION', submission);
       // submit the submission to the K2
       await namespaceWrapper.checkSubmissionAndUpdateRound(

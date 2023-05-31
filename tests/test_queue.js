@@ -50,7 +50,7 @@ async function main() {
         await Promise.allSettled(queue);
       } else {
         console.log('no more peers to process')
-        printStatus();
+        // printStatus();
       }
     } catch (err) {
       console.error('error processing a node', err);

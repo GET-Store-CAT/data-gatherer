@@ -19,6 +19,10 @@ const run = async () => {
   // Load node's keypair from the JSON file
   const keypair = await namespaceWrapper.getSubmitterAccount();
 
+let publicKeyHex = Buffer.from(keypair._keypair.publicKey).toString('hex');
+
+  console.log('publicKeyHex', publicKeyHex);
+
   // get Round
   const round = await namespaceWrapper.getRound();
 
@@ -55,12 +59,9 @@ const run = async () => {
 
   const submission_value = {
     proofs: result,
-    node_publicKey: keypair.publicKey,
+    node_publicKey: publicKeyHex,
     node_signature: bs58.encode(signature),
   };
-
-  // TODO test proof db
-  await dataDb.addProof(round, submission_value);
 
   const proof_cid = await uploadIPFS(submission_value, round);
 
@@ -68,7 +69,7 @@ const run = async () => {
 
 };
 
-uploadIPFS = async function (data, round) {
+async function uploadIPFS(data, round) {
   const proofPath = `./arweave/proofs${round}.json`;
 
   if (!fs.existsSync(`./arweave`)) fs.mkdirSync(`./arweave`);

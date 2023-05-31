@@ -42,7 +42,7 @@ class Gatherer {
   }
 
   gather = async limit => {
-    console.log('limit received', limit);
+    // console.log('limit received', limit);
 
     // I. Startup
     // 1. Fetch an initial list of items using the query provided
@@ -86,17 +86,17 @@ class Gatherer {
     while (red) {
       try {
         if (this.pending.length > 0) {
-          console.log('adding batch', this.pending.length);
+          // console.log('adding batch', this.pending.length);
           this.queue.push(
             this.task_queue.run(() =>
-              this.addBatch().catch(e => console.error(e)),
+              this.addBatch(limit).catch(e => console.error(e)),
             ),
           );
 
           await Promise.allSettled(this.queue); // TODO fix batching as this will only resolve once all queued items have run, while we want to refill the batch as it is emptied
         } else {
           console.log('queue empty');
-          this.printStatus();
+          // this.printStatus();
           break;
         }
       } catch (err) {
@@ -115,7 +115,7 @@ class Gatherer {
       // IV. Auditing and Proofs
       // 9. Incrementally upload new items to IPFS and save the IPFS hash to the database (i.e. db.put('ipfs:' + item.id + ':data, ipfsHash)) for use in the rest apis
       healthyNodes.forEach(async peer => {
-        console.log ('peer', peer);
+        // console.log ('peer', peer);
         await this.db.setIPFS(peer, cid);
       });
 
@@ -152,8 +152,8 @@ class Gatherer {
     return cid;
   };
 
-  addBatch = async function () {
-    for (let i = 0; i < this.pending.length; i++) {
+  addBatch = async function (limit) {
+    for (let i = 0; i < limit; i++) {
       await this.processPending();
     }
   };
@@ -166,7 +166,7 @@ class Gatherer {
       // console.log('item', item);
       const peerInstance = new Peer(item);
       // console.log(`starting ${ item.location }, remaining ${ this.pending.length }`);
-      this.printStatus();
+      // this.printStatus();
 
       let result = await peerInstance.fullScan(item, this.txId);
       // remove from pending
@@ -196,7 +196,7 @@ class Gatherer {
       this.removeFromRunning(item); // this function should take care of removing the old pending item and adding new pending items for the list from this item
     } else {
       console.log('no more pending items')
-      this.printStatus();
+      // this.printStatus();
       return;
     }
   };
@@ -226,7 +226,7 @@ class Gatherer {
       throw new Error('You must pass an array of peer objects');
 
       if (!Array.isArray(peers)) {
-        console.log('peers', peers);
+        // console.log('peers', peers);
         throw new Error('You must pass an array of peer objects');
       }  
 

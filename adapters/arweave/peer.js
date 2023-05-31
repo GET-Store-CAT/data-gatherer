@@ -18,7 +18,7 @@ class Peer {
       const response = await axios.get(url, {
         timeout: 10000,
       });
-      console.log('payload received', response.data);
+      // console.log('payload received', response.data);
 
       if (response.data && response.data !== 'unknown') {
         this.isHealthy = true;
@@ -38,7 +38,7 @@ class Peer {
   fullScan = async function (peer, txid) {
     if (typeof peer !== 'string') peer = JSON.stringify(peer.location);
     peer = String(peer).replace(/"/g, ''); // Remove double quotes
-    console.log('checking ', peer);
+    // console.log('checking ', peer);
     let url = new URL(`http://${peer}/peers`);
     if (!this.isHealthy) await this.healthCheck(url);
 

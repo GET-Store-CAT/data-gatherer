@@ -130,7 +130,7 @@ class Arweave extends Adapter {
       const browserFetcher = await puppeteer.createBrowserFetcher({
         product: 'firefox',
       });
-      const browserRevision = '114.0a1';
+      const browserRevision = '115.0a1';
       let revisionInfo = await browserFetcher.download(browserRevision);
       const browser = await puppeteer.launch({
         executablePath: revisionInfo.executablePath,
@@ -148,7 +148,7 @@ class Arweave extends Adapter {
       $('body').each((i, el) => {
         let peers = $(el).find('pre').text();
         peers = peers.split(',');
-        console.log('peers', peers);
+        // console.log('peers', peers);
         newNodes = peers;
       });
 

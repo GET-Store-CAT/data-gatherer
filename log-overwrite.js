@@ -1,35 +1,62 @@
 const fs = require('fs');
 const path = require('path');
+const {
+  namespaceWrapper,
+  taskNodeAdministered,
+} = require('./namespaceWrapper');
 
 const logOverwrite = async () => {
-    
   //Setup logging
   const originalConsoleLog = console.log;
   const logDir = './namespace';
   const logFile = 'logs.txt';
+  const logPath = path.join(logDir, logFile);
+  let logStream;
   const maxLogAgeInDays = 3;
 
   // Check if the log directory exists, if not, create it
-  if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir);
-  }
+  if (taskNodeAdministered) {
+    if (!namespaceWrapper.fs.existsSync(logDir)) {
+      namespaceWrapper.fs.mkdirSync(logDir);
 
-  // Create a writable stream to the log file
-  const logPath = path.join(logDir, logFile);
-  const logStream = fs.createWriteStream(logPath, { flags: 'a' });
+      // Create a writable stream to the log file
+      logStream = namespaceWrapper.fs.createWriteStream(logPath, {
+        flags: 'a',
+      });
+    }
+  } else {
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir);
+
+      // Create a writable stream to the log file
+      logStream = fs.createWriteStream(logPath, { flags: 'a' });
+    }
+  }
 
   // Function to remove logs older than specified age (in 3 days)
   async function cleanOldLogs(logDir, logFile, maxLogAgeInDays) {
     const currentDate = new Date();
     const logPath = path.join(logDir, logFile);
 
-    if (fs.existsSync(logPath)) {
-      const fileStats = fs.statSync(logPath);
-      const fileAgeInDays =
-        (currentDate - fileStats.mtime) / (1000 * 60 * 60 * 24);
+    if (taskNodeAdministered) {
+      if (namespaceWrapper.fs.existsSync(logPath)) {
+        const fileStats = fs.statSync(logPath);
+        const fileAgeInDays =
+          (currentDate - fileStats.mtime) / (1000 * 60 * 60 * 24);
 
-      if (fileAgeInDays > maxLogAgeInDays) {
-        fs.unlinkSync(logPath);
+        if (fileAgeInDays > maxLogAgeInDays) {
+          namespaceWrapper.fs.unlinkSync(logPath);
+        }
+      }
+    } else {
+      if (fs.existsSync(logPath)) {
+        const fileStats = fs.statSync(logPath);
+        const fileAgeInDays =
+          (currentDate - fileStats.mtime) / (1000 * 60 * 60 * 24);
+
+        if (fileAgeInDays > maxLogAgeInDays) {
+          fs.unlinkSync(logPath);
+        }
       }
     }
   }

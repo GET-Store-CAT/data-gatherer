@@ -87,12 +87,12 @@ async function uploadIPFS(data, round) {
     const proof_cid = await storageClient.put(file);
     console.log(`Proofs of healthy list in round ${round} : `, proof_cid);
 
-    await fsPromise.unlink(proofPath, (err) => {
-      if (err) {
-        console.error(err);
-      }
-    });
-
+    try {
+      await fsPromise.unlink(proofPath);
+    } catch (err) {
+      console.error(err);
+    }
+    
     return proof_cid;
   } else {
     console.log('NODE DO NOT HAVE ACCESS TO WEB3.STORAGE');

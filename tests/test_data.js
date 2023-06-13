@@ -17,6 +17,15 @@ const datadb = require('../helpers/db');
 async function test() {
   await datadb.intializeData();
 
+  // TEST add proof
+  // await datadb.addProof(23, 'testcid2'); // store CID in levelDB
+  // console.log('Node Proof CID stored in round', 23)
+
+
+// TEST get proof
+  const proof_cid = await datadb.getProof(23); // retrieves the cid
+  console.log('Arweave proofs CID', proof_cid, "in round", 23);
+
   // TEST create healthy Item
 
   
@@ -53,8 +62,8 @@ async function test() {
     
 
   // TEST get healthy list
-  let healthyList = await datadb.getHealthyList()
-  console.log('healthy list is ', healthyList);
+  // let healthyList = await datadb.getHealthyList()
+  // console.log('healthy list is ', healthyList);
 
   // console.log('test list is ', testlist);
   //     console.log('Create item test passed');

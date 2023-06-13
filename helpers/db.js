@@ -19,9 +19,6 @@ namespaceWrapper.getDb().then((db)=>{
     if (err) console.error('Index creation error:', err);
   });
   
-  db.ensureIndex({ fieldName: 'proof', unique: true, sparse:true }, function (err) {
-    if (err) console.error('Index creation error:', err);
-  });
   
 });
 

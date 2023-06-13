@@ -13,6 +13,7 @@ const {
   Capabilities,
 } = require('selenium-webdriver');
 const puppeteer = require('puppeteer');
+const PCR = require("puppeteer-chromium-resolver");
 const cheerio = require('cheerio');
 
 class Arweave extends Adapter {
@@ -71,7 +72,7 @@ class Arweave extends Adapter {
       }
       return;
     } catch (err) {
-      console.error("can't fetch peers from " + this.location + err);
+      console.error("can't fetch peers from " + this.location + " " + err);
     }
     return peers;
   };
@@ -127,15 +128,12 @@ class Arweave extends Adapter {
       console.log('fetching peer list');
       let newNodes = [];
 
-      const browserFetcher = await puppeteer.createBrowserFetcher({
-        product: 'firefox',
-      });
-      const browserRevision = '115.0a1';
-      let revisionInfo = await browserFetcher.download(browserRevision);
-      const browser = await puppeteer.launch({
-        executablePath: revisionInfo.executablePath,
-        product: 'firefox',
-        headless: 'new', // other options can be included here
+      const options = {};
+      const stats = await PCR(options);
+  
+      let browser = await stats.puppeteer.launch({ 
+        headless: 'new',
+        executablePath: stats.executablePath 
       });
 
       const page = await browser.newPage();

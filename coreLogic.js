@@ -5,12 +5,10 @@ const arweave_validate = require('./arweave_validate');
 const dataDb = require('./helpers/db');
 const { Keypair } = require('@solana/web3.js'); // TEST For local testing only
 class CoreLogic {
-  async task() {
+  async task(round) {
     
     // run arweave web scrapping
     console.log('********Arweave Webscrapiing started**********');
-
-    const round = await namespaceWrapper.getRound();
 
     // TEST For only testing purposes:
     // const round = 1000

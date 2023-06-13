@@ -196,7 +196,7 @@ class Gatherer {
       this.removeFromRunning(item); // this function should take care of removing the old pending item and adding new pending items for the list from this item
     } else {
       console.log('no more pending items')
-      // this.printStatus();
+      this.printStatus();
       return;
     }
   };

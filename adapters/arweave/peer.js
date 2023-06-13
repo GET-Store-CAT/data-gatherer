@@ -27,7 +27,7 @@ class Peer {
 
       // console.log('healthcheck completed')
     } catch (err) {
-      console.error("can't fetch " + url.href + err);
+      console.error("can't fetch " + url.href + " " + err);
     }
     return;
   };
@@ -38,7 +38,7 @@ class Peer {
   fullScan = async function (peer, txid) {
     if (typeof peer !== 'string') peer = JSON.stringify(peer.location);
     peer = String(peer).replace(/"/g, ''); // Remove double quotes
-    // console.log('checking ', peer);
+    console.log('Full scaning ', peer);
     let url = new URL(`http://${peer}/peers`);
     if (!this.isHealthy) await this.healthCheck(url);
 
@@ -51,7 +51,8 @@ class Peer {
       await this.checkTx(peer, txid);
     }
 
-    // console.log(this.peers)
+    console.log('Health check result of ', peer, this.containsTx);
+    console.log("Full scan result of ", peer, this.containsTx)
 
     return this.containsTx;
   };
@@ -64,7 +65,7 @@ class Peer {
     if (this.isHealthy) {
       try {
         let txurl = new URL(`http://${peer}/tx/${txid}`);
-        // console.log('sending txid check for ', peerUrl)
+        console.log('sending txid check for ', peerUrl)
         const response = await axios.get(txurl, {
           timeout: 10000,
         });
@@ -101,7 +102,7 @@ class Peer {
         }
         return;
       } catch (err) {
-        console.error("can't fetch peers from " + this.location + err);
+        console.error("can't fetch peers from " + this.location + " " + err);
       }
     }
     return;

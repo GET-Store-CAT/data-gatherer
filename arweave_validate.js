@@ -9,9 +9,6 @@ module.exports = async (submission_value, round) => {
   const outputraw = await dataFromCid(submission_value);
   const output = outputraw.data;
   console.log('OUTPUT', output);
-  console.log('RESPONSE DATA length', output.proofs.length);
-  console.log('PUBLIC KEY', output.node_publicKey);
-  console.log('SIGNATURE', output.node_signature);
 
   // Check that the node who submitted the proofs is a valid staked node
   let isNode = await verifyNode(
@@ -32,6 +29,13 @@ module.exports = async (submission_value, round) => {
 // verify the linktree signature by querying the other node to get it's copy of the linktree
 async function verifyPeers(proofs) {
   const healthyList = await dataFromCid(proofs);
+  if (!healthyList) {
+    console.log('No data received from web3.storage');
+    return false;
+  } else if (healthyList == '[]') {
+    console.log('No healthy list to verify');
+    return true;
+  }
   for (let i = 0; i < healthyList.length; i++) {
     let peer = healthyList[i];
     let url = `http://${peer}`;
@@ -47,14 +51,14 @@ async function verifyPeers(proofs) {
 
 // verifies that a node's signature is valid, and rejects situations where CIDs from IPFS return no data or are not JSON
 async function verifyNode(proofs, signature, publicKey) {
-  const messageUint8Array = new Uint8Array(Buffer.from(proofs));
-  const signatureUint8Array = bs58.decode(signature);
-  const publicKeyUint8Array = bs58.decode(publicKey);
-
   if (!proofs || !signature || !publicKey) {
-    console.error('No data received from web3.storage');
+    console.log('No data received from web3.storage');
     return false;
   }
+
+  const messageUint8Array = new Uint8Array(Buffer.from(proofs));
+  const signatureUint8Array = bs58.decode(signature);
+  const publicKeyUint8Array = new Uint8Array(Buffer.from(publicKey, 'hex'));
 
   // verify the node signature
   const isSignatureValid = await verifySignature(

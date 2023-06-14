@@ -72,7 +72,7 @@ class Arweave extends Adapter {
       }
       return;
     } catch (err) {
-      console.error("can't fetch peers from " + this.location + " " + err);
+      console.log("can't fetch peers from " + this.location + " " + err);
     }
     return peers;
   };

@@ -9,9 +9,10 @@ beforeAll(async () => {
 
 describe('Performing the task', () => {
   it('should performs the core logic task', async () => {
-    const result = await coreLogic.task();
+    const round = 1;
+    const result = await coreLogic.task(round);
     expect(result).not.toContain('ERROR IN EXECUTING TASK');
-  });
+  }, 500000);
 
   it('should fetch the submission', async () => {
     const result = await coreLogic.fetchSubmission();

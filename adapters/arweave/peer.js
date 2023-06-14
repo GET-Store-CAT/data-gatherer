@@ -10,7 +10,7 @@ class Peer {
   healthCheck = async function (url) {
     // console.log('entered healthcheck')
     if (this.location.length > 100) {
-      console.error('location field is too large');
+      console.log('location field is too large');
       return;
     }
     try {
@@ -27,7 +27,7 @@ class Peer {
 
       // console.log('healthcheck completed')
     } catch (err) {
-      console.error("can't fetch " + url.href + " " + err);
+      console.log("can't fetch " + url.href + " " + err);
     }
     return;
   };
@@ -102,7 +102,7 @@ class Peer {
         }
         return;
       } catch (err) {
-        console.error("can't fetch peers from " + this.location + " " + err);
+        console.log("can't fetch peers from " + this.location + " " + err);
       }
     }
     return;

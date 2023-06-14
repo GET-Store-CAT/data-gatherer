@@ -6,6 +6,7 @@ const {
   namespaceWrapper,
   taskNodeAdministered,
 } = require('./namespaceWrapper');
+const { TASK_ID } = require('./init');
 
 // Middleware to log incoming requests
 router.use((req, res, next) => {
@@ -25,7 +26,7 @@ router.get('/taskState', async (req, res) => {
 router.get('/logs', async (req, res) => {
   let logs;
   if (taskNodeAdministered) {
-    logs = namespaceWrapper.fs(readFile, './namespace/logs.txt', 'utf8');
+    logs = namespaceWrapper.fs('readFile', `./namespace/${TASK_ID}/logs.txt`, 'utf8');
   } else {
     logs = fs.readFileSync('./namespace/logs.txt', 'utf8');
   }

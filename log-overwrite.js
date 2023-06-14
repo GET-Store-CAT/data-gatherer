@@ -4,32 +4,29 @@ const {
   namespaceWrapper,
   taskNodeAdministered,
 } = require('./namespaceWrapper');
+const { TASK_ID } = require('./init');
 
 const logOverwrite = async () => {
   //Setup logging
   const originalConsoleLog = console.log;
-  const logDir = './namespace';
+  const logDir = './';
   const logFile = 'logs.txt';
-  const logPath = path.join(logDir, logFile);
-  let logStream;
+  let logPath = path.join(logDir, logFile);
   const maxLogAgeInDays = 3;
 
   // Check if the log directory exists, if not, create it
   if (taskNodeAdministered) {
-    if (!namespaceWrapper.fs(access, logDir)) {
-      namespaceWrapper.fs(mkdir, logDir);
+    logPath = `${logPath}`
+    if (!namespaceWrapper.fs('access', logPath)) {
+      await namespaceWrapper.fs('mkdir', logPath);
 
-      // Create a writable stream to the log file
-      logStream = fs.createWriteStream(logPath, {
-        flags: 'a',
-      });
     }
   } else {
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir);
+    if (!fs.existsSync(logPath)) {
+      fs.mkdirSync(logPath);
 
       // Create a writable stream to the log file
-      logStream = fs.createWriteStream(logPath, { flags: 'a' });
+      
     }
   }
 
@@ -39,13 +36,13 @@ const logOverwrite = async () => {
     const logPath = path.join(logDir, logFile);
 
     if (taskNodeAdministered) {
-      if (namespaceWrapper.fs(access, logPath)) {
-        const fileStats = namespaceWrapper.fs(stat, logPath);
+      if (namespaceWrapper.fs('access', logPath)) {
+        const fileStats = namespaceWrapper.fs('stat', logPath);
         const fileAgeInDays =
           (currentDate - fileStats.mtime) / (1000 * 60 * 60 * 24);
 
         if (fileAgeInDays > maxLogAgeInDays) {
-          namespaceWrapper.fs(unlink, logPath);
+          namespaceWrapper.fs('unlink', logPath);
         }
       }
     } else {
@@ -60,6 +57,7 @@ const logOverwrite = async () => {
       }
     }
   }
+  let logStream = fs.createWriteStream(`namespace/${TASK_ID}/${logPath}`, { flags: 'a' });
 
   // Overwrite the console.log function to write to the log file
   console.log = function (...args) {

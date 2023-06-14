@@ -14,6 +14,7 @@ const { Web3Storage, getFilesFromPath } = require('web3.storage');
 const storageClient = new Web3Storage({
   token: process.env.SECRET_WEB3_STORAGE_KEY,
 });
+const { TASK_ID } = require('./init');
 
 const credentials = {}; // arweave doesn't need credentials
 
@@ -65,20 +66,20 @@ const run = async round => {
 };
 
 async function uploadIPFS(data, round) {
-  const proofPath = `./arweave/proofs${round}.json`;
+  let proofPath = `proofs${round}.json`;
 
   if (taskNodeAdministered) {
-    if (!namespaceWrapper.fs(access, `./arweave`)) {
-      namespaceWrapper.fs(mkdir, `./arweave`);
+    if (!namespaceWrapper.fs('access', proofPath)) {
+      namespaceWrapper.fs('mkdir', proofPath);
     }
   } else {
-    if (!fs.existsSync(`./arweave`)) fs.mkdirSync(`./arweave`);
+    if (!fs.existsSync(`proofPath`)) fs.mkdirSync(`proofPath`);
   }
 
   console.log('proofPATH', proofPath);
 
   if (taskNodeAdministered) {
-    await namespaceWrapper.fs(writeFile, 
+    await namespaceWrapper.fs('writeFile', 
       proofPath,
       JSON.stringify(data),
       err => {
@@ -96,13 +97,18 @@ async function uploadIPFS(data, round) {
   }
 
   if (storageClient) {
-    const file = await getFilesFromPath(proofPath);
+    let file;
+    if (taskNodeAdministered) {
+      file = await getFilesFromPath(`namespace/${TASK_ID}/${proofPath}`);
+    } else {
+      file = await getFilesFromPath(proofPath);
+    }
     const proof_cid = await storageClient.put(file);
     console.log(`Proofs of healthy list in round ${round} : `, proof_cid);
 
     if (taskNodeAdministered) {
       try {
-        await namespaceWrapper.fs(unlink, proofPath);
+        await namespaceWrapper.fs('unlink', proofPath);
       } catch (err) {
         console.error(err);
       }

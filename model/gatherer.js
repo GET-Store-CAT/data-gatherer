@@ -25,6 +25,7 @@ const {
   namespaceWrapper,
   taskNodeAdministered,
 } = require('../namespaceWrapper');
+const { TASK_ID } = require('../init');
 
 class Gatherer {
   constructor(db, adapter, options) {
@@ -132,10 +133,10 @@ class Gatherer {
 
   // TODO - test this one
   uploadIPFS = async function (data) {
-    const path = `./arweave/healthyList.json`;
+    let path = `healthyList.json`;
     if (taskNodeAdministered) {
-      if (!namespaceWrapper.fs(access, `./namespace/arweave`))
-        namespaceWrapper.fs(mkdir, `./namespace/arweave`);
+      if (!namespaceWrapper.fs('access', path))
+        namespaceWrapper.fs('mkdir', path);
     } else {
       if (!fs.existsSync(`./arweave`)) fs.mkdirSync(`./arweave`);
     }
@@ -143,7 +144,7 @@ class Gatherer {
     console.log('PATH', path);
 
     if (taskNodeAdministered) {
-      await namespaceWrapper.fs(writeFile, path, JSON.stringify(data), err => {
+      await namespaceWrapper.fs('writeFile', `${path}`, JSON.stringify(data), err => {
         if (err) {
           console.error(err);
         }
@@ -157,7 +158,12 @@ class Gatherer {
     }
 
     if (storageClient) {
-      const file = await getFilesFromPath(path);
+      let file;
+      if (taskNodeAdministered) {
+        file = await getFilesFromPath(`namespace/${TASK_ID}/${path}`);
+      } else {
+        file = await getFilesFromPath(path);
+      }
       const cid = await storageClient.put(file);
       console.log('Arweave healthy list to IPFS: ', cid);
 
@@ -258,8 +264,8 @@ class Gatherer {
 
   addToHealthy(nodeLocation) {
     if (taskNodeAdministered) {
-      namespaceWrapper.fs(appendFile,
-        './namespace/healthy.txt',
+      namespaceWrapper.fs('appendFile',
+        `healthy.txt`,
         nodeLocation + ' ',
         function (err) {
           if (err) throw err;

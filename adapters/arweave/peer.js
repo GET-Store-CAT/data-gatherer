@@ -51,31 +51,37 @@ class Peer {
       await this.checkTx(peer, txid);
     }
 
-    console.log('Health check result of ', peer, this.containsTx);
-    console.log("Full scan result of ", peer, this.containsTx)
+    // console.log('Health check result of ', peer, this.isHealthy);
+    // console.log("TX scan result of ", peer, this.containsTx)
 
-    return this.containsTx;
+    let result = {
+      isHealthy: this.isHealthy,
+      containsTx: this.containsTx,
+      peers: this.peers,
+    };
+
+    return result;
   };
 
   // CheckTx
   // Checks if a specific node has a given txId
   checkTx = async function (peer, txid) {
-    if (!this.isHealthy) await this.healthCheck();
+    // if (!this.isHealthy) await this.healthCheck();
 
     if (this.isHealthy) {
       try {
         let txurl = new URL(`http://${peer}/tx/${txid}`);
-        console.log('sending txid check for ', peerUrl)
-        const response = await axios.get(txurl, {
+        console.log('sending txid check for ', txurl.href)
+        const response = await axios.get(txurl.href, {
           timeout: 10000,
         });
         // console.log('payload returned from ' + peerUrl, payload)
-        const body = JSON.parse(response.data);
-        if (body) {
+        // console.log(response.status)
+        if (response.status == 200) {
           this.containsTx = true;
         }
       } catch (err) {
-        // if (debug) console.error ("can't fetch " + this.location, err)
+         console.log ("can't fetch " + this.location + " " + err)
       }
     }
     return this;

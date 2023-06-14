@@ -115,7 +115,7 @@ class Gatherer {
     let healthyNodes = await this.db.getHealthyList();
     if (healthyNodes) {
       console.log('healthy nodes', healthyNodes);
-      const cid = this.uploadIPFS(healthyNodes);
+      const cid = await this.uploadIPFS(healthyNodes);
       // IV. Auditing and Proofs
       // 9. Incrementally upload new items to IPFS and save the IPFS hash to the database (i.e. db.put('ipfs:' + item.id + ':data, ipfsHash)) for use in the rest apis
       healthyNodes.forEach(async peer => {
@@ -189,27 +189,24 @@ class Gatherer {
       let pendingId = `pending:${item}`;
       await this.db.deleteItem(pendingId);
       this.queried.push(item.location);
+      console.log("healthy? ", result.isHealthy, "contains tx? ", result.containsTx)
       if (result.isHealthy) {
         console.log('received ', result.peers.length, ' peers');
         await this.adapter.storeListAsPendingItems(result.peers);
       }
 
-      if (result.isHealthy) {
-        this.updateHealthy(item);
+      if (result.containsTx) {
+        await this.updateHealthy(item);
 
         console.log(`Healthy node found at ${item} `);
-        this.printStatus();
+        await this.printStatus();
 
         if (result.peers.length > 0) {
           // console.log('has peers!')
-          this.addNodes(result.peers);
-        }
-        if (result.containsTx) {
-          // console.log('is replicator!!!')
-          this.addReplicator(item);
+          await this.addNodes(result.peers);
         }
       }
-      this.removeFromRunning(item); // this function should take care of removing the old pending item and adding new pending items for the list from this item
+      await this.removeFromRunning(item); // this function should take care of removing the old pending item and adding new pending items for the list from this item
     } else {
       console.log('no more pending items');
       this.printStatus();

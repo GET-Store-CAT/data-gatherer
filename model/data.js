@@ -111,7 +111,7 @@ class Data {
     let runningId = this.createRunningId(id);
     let runningItem = 'running:' + JSON.stringify(value);
     try {
-      this.db.insert({ runningId, runningItem });
+      await this.db.insert({ runningId, runningItem });
       console.log('added running item', id);
       return true;
     } catch (err) {
@@ -151,13 +151,24 @@ class Data {
   async addHealthyItem(id, value) {
     let healthyId = this.createHealthyId(id);
     let healthyItem = 'healthy:' + value.replace(/[\[\]"]/g, '');
-    try {
-      await this.db.insert({ healthyId, healthyItem });
-      console.log('added healthy item', { healthyId, healthyItem });
+    let existingData = await this.db.findOne({ healthyId });
+    console.log('existing data is ', existingData);
+    if (!existingData) {
+      try {
+        await this.db.insert({ healthyId, healthyItem });
+        console.log('added healthy item', { healthyId, healthyItem });
+        return true;
+      } catch (err) {
+        console.error(
+          'Error in addHealthyItem',
+          { healthyId, healthyItem },
+          err,
+        );
+        return undefined;
+      }
+    } else {
+      console.log('healthy item already exists');
       return true;
-    } catch (err) {
-      console.error('Error in addHealthyItem', { healthyId, healthyItem }, err);
-      return undefined;
     }
   }
 
@@ -193,13 +204,19 @@ class Data {
   // add IPFS to db
   async setIPFS(id, cid) {
     let ipfsId = id;
-    try {
-      this.db.insert({ ipfsId, cid });
-      // console.log('added IPFS', id);
+    let existingData = await this.db.findOne({ ipfsId });
+    if (!existingData) {
+      try {
+        await this.db.insert({ ipfsId, cid });
+        // console.log('added IPFS', id);
+        return true;
+      } catch (err) {
+        console.error('Error in setIPFS', err.errorType);
+        return undefined;
+      }
+    } else {
+      console.log('IPFS already exists');
       return true;
-    } catch (err) {
-      console.error('Error in setIPFS', err.errorType);
-      return undefined;
     }
   }
 
@@ -222,13 +239,19 @@ class Data {
   // add proof to db by round
   async addProof(round, proofItem) {
     let proof = `${this.name}:proof:${round}`;
-    try {
-      this.db.insert({ proof, proofItem });
-      console.log('added proof', round);
+    let existingData = await this.db.findOne({ proof });
+    if (!existingData) {
+      try {
+        await this.db.insert({ proof, proofItem });
+        console.log('added proof', round);
+        return true;
+      } catch (err) {
+        console.error('Error in addProof', err.errorType);
+        return undefined;
+      }
+    } else {
+      console.log('proof already exists');
       return true;
-    } catch (err) {
-      console.error('Error in addProof', err.errorType);
-      return undefined;
     }
   }
 
@@ -258,7 +281,7 @@ class Data {
   }
 
   async deleteItem(docToDelete) {
-    console.log('deleting item', docToDelete);
+    // console.log('deleting item', docToDelete);
     await this.db.remove({ docToDelete });
   }
 

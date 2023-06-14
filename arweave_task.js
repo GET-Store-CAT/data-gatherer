@@ -68,8 +68,8 @@ async function uploadIPFS(data, round) {
   const proofPath = `./arweave/proofs${round}.json`;
 
   if (taskNodeAdministered) {
-    if (!namespaceWrapper.fs.existsSync(`./arweave`)) {
-      namespaceWrapper.fs.mkdirSync(`./arweave`);
+    if (!namespaceWrapper.fs(access, `./arweave`)) {
+      namespaceWrapper.fs(mkdir, `./arweave`);
     }
   } else {
     if (!fs.existsSync(`./arweave`)) fs.mkdirSync(`./arweave`);
@@ -78,7 +78,7 @@ async function uploadIPFS(data, round) {
   console.log('proofPATH', proofPath);
 
   if (taskNodeAdministered) {
-    await namespaceWrapper.fs.writeFile(
+    await namespaceWrapper.fs(writeFile, 
       proofPath,
       JSON.stringify(data),
       err => {
@@ -102,7 +102,7 @@ async function uploadIPFS(data, round) {
 
     if (taskNodeAdministered) {
       try {
-        await namespaceWrapper.fs.unlinkSync(proofPath);
+        await namespaceWrapper.fs(unlink, proofPath);
       } catch (err) {
         console.error(err);
       }

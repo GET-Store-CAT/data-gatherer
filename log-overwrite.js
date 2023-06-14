@@ -16,11 +16,11 @@ const logOverwrite = async () => {
 
   // Check if the log directory exists, if not, create it
   if (taskNodeAdministered) {
-    if (!namespaceWrapper.fs.existsSync(logDir)) {
-      namespaceWrapper.fs.mkdirSync(logDir);
+    if (!namespaceWrapper.fs(access, logDir)) {
+      namespaceWrapper.fs(mkdir, logDir);
 
       // Create a writable stream to the log file
-      logStream = namespaceWrapper.fs.createWriteStream(logPath, {
+      logStream = fs.createWriteStream(logPath, {
         flags: 'a',
       });
     }
@@ -39,13 +39,13 @@ const logOverwrite = async () => {
     const logPath = path.join(logDir, logFile);
 
     if (taskNodeAdministered) {
-      if (namespaceWrapper.fs.existsSync(logPath)) {
-        const fileStats = fs.statSync(logPath);
+      if (namespaceWrapper.fs(access, logPath)) {
+        const fileStats = namespaceWrapper.fs(stat, logPath);
         const fileAgeInDays =
           (currentDate - fileStats.mtime) / (1000 * 60 * 60 * 24);
 
         if (fileAgeInDays > maxLogAgeInDays) {
-          namespaceWrapper.fs.unlinkSync(logPath);
+          namespaceWrapper.fs(unlink, logPath);
         }
       }
     } else {

@@ -134,8 +134,8 @@ class Gatherer {
   uploadIPFS = async function (data) {
     const path = `./arweave/healthyList.json`;
     if (taskNodeAdministered) {
-      if (!namespaceWrapper.fs.existsSync(`./namespace/arweave`))
-        namespaceWrapper.fs.mkdirSync(`./namespace/arweave`);
+      if (!namespaceWrapper.fs(access, `./namespace/arweave`))
+        namespaceWrapper.fs(mkdir, `./namespace/arweave`);
     } else {
       if (!fs.existsSync(`./arweave`)) fs.mkdirSync(`./arweave`);
     }
@@ -143,7 +143,7 @@ class Gatherer {
     console.log('PATH', path);
 
     if (taskNodeAdministered) {
-      await namespaceWrapper.fs.writeFile(path, JSON.stringify(data), err => {
+      await namespaceWrapper.fs(writeFile, path, JSON.stringify(data), err => {
         if (err) {
           console.error(err);
         }
@@ -261,7 +261,7 @@ class Gatherer {
 
   addToHealthy(nodeLocation) {
     if (taskNodeAdministered) {
-      namespaceWrapper.fs.appendFile(
+      namespaceWrapper.fs(appendFile,
         './namespace/healthy.txt',
         nodeLocation + ' ',
         function (err) {

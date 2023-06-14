@@ -15,12 +15,16 @@ const Search = require('./search');
 const Twitter = require('../adapters/twitter');
 const Peer = require('../adapters/arweave/peer');
 const fs = require('fs');
-const fsPromise = require("fs/promises");
+const fsPromise = require('fs/promises');
 const { Web3Storage, getFilesFromPath } = require('web3.storage');
 const storageClient = new Web3Storage({
   token: process.env.SECRET_WEB3_STORAGE_KEY,
 });
 const { Queue } = require('async-await-queue');
+const {
+  namespaceWrapper,
+  taskNodeAdministered,
+} = require('../namespaceWrapper');
 
 class Gatherer {
   constructor(db, adapter, options) {
@@ -129,16 +133,28 @@ class Gatherer {
   // TODO - test this one
   uploadIPFS = async function (data) {
     const path = `./arweave/healthyList.json`;
-
-    if (!fs.existsSync(`./arweave`)) fs.mkdirSync(`./arweave`);
+    if (taskNodeAdministered) {
+      if (!namespaceWrapper.fs(access, `./namespace/arweave`))
+        namespaceWrapper.fs(mkdir, `./namespace/arweave`);
+    } else {
+      if (!fs.existsSync(`./arweave`)) fs.mkdirSync(`./arweave`);
+    }
 
     console.log('PATH', path);
 
-    await fsPromise.writeFile(path, JSON.stringify(data), (err) => {
-      if (err) {
-        console.error(err);
-      }
-    });
+    if (taskNodeAdministered) {
+      await namespaceWrapper.fs(writeFile, path, JSON.stringify(data), err => {
+        if (err) {
+          console.error(err);
+        }
+      });
+    } else {
+      await fsPromise.writeFile(path, JSON.stringify(data), err => {
+        if (err) {
+          console.error(err);
+        }
+      });
+    }
 
     if (storageClient) {
       const file = await getFilesFromPath(path);
@@ -181,7 +197,7 @@ class Gatherer {
       if (result.isHealthy) {
         this.updateHealthy(item);
 
-        console.log(`Healthy node found at ${ item } `)
+        console.log(`Healthy node found at ${item} `);
         this.printStatus();
 
         if (result.peers.length > 0) {
@@ -195,7 +211,7 @@ class Gatherer {
       }
       this.removeFromRunning(item); // this function should take care of removing the old pending item and adding new pending items for the list from this item
     } else {
-      console.log('no more pending items')
+      console.log('no more pending items');
       this.printStatus();
       return;
     }
@@ -225,10 +241,10 @@ class Gatherer {
     if (!peers || peers.length < 1)
       throw new Error('You must pass an array of peer objects');
 
-      if (!Array.isArray(peers)) {
-        // console.log('peers', peers);
-        throw new Error('You must pass an array of peer objects');
-      }  
+    if (!Array.isArray(peers)) {
+      // console.log('peers', peers);
+      throw new Error('You must pass an array of peer objects');
+    }
 
     peers.forEach(peerUrl => {
       // a bit sloppy, but add the peer if it's not already in either the pending or past lists
@@ -244,9 +260,19 @@ class Gatherer {
   };
 
   addToHealthy(nodeLocation) {
-    fs.appendFile('./healthy.txt', nodeLocation + ' ', function (err) {
-      if (err) throw err;
-    });
+    if (taskNodeAdministered) {
+      namespaceWrapper.fs(appendFile,
+        './namespace/healthy.txt',
+        nodeLocation + ' ',
+        function (err) {
+          if (err) throw err;
+        },
+      );
+    } else {
+      fs.appendFile('./healthy.txt', nodeLocation + ' ', function (err) {
+        if (err) throw err;
+      });
+    }
   }
 
   updateHealthy = async function (peerLocation) {

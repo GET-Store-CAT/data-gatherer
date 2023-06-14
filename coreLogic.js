@@ -9,11 +9,8 @@ class CoreLogic {
     
     // run arweave web scrapping
     console.log('********Arweave Webscrapiing started**********');
-
-    // TEST For only testing purposes:
-    // const round = 1000
     
-    const proof_cid = await arweave_task();
+    const proof_cid = await arweave_task(round);
 
     if (proof_cid) {
       await dataDb.intializeData();

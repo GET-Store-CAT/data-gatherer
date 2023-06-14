@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "go": "yarn && yarn start > log.txt |  tail -f log.txt | yarn test:api ",
-    "test": "node tests/full.js",
+    "test": "jest --detectOpenHandles",
     "test:api": "node tests/api.js",
     "start": "node index.js",
     "webpack": "webpack",
@@ -38,6 +38,8 @@
     "web3.storage": "^4.4.0"
   },
   "devDependencies": {
+    "jest": "^29.5.0",
+    "joi": "^17.9.2",
     "webpack": "^5.28.0",
     "webpack-cli": "^4.5.0"
   }

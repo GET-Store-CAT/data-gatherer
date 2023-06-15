@@ -129,11 +129,11 @@ class Gatherer {
   };
 
   uploadIPFS = async function (data) {
-    let path = `/healthyList.json`;
+    let path = `healthyList.json`;
 
     try {
       const resp = await namespaceWrapper.fs('access', path);
-      if (!resp.errpr) {
+      if (!resp.error) {
         console.log('healthy list file exists, appending');
         await namespaceWrapper.fs(
           'appendFile',
@@ -171,11 +171,8 @@ class Gatherer {
     }
 
     if (storageClient) {
-      const basePath = (await namespaceWrapper.getTaskLevelDBPath()).replace(
-        '/KOIIDB',
-        path,
-      );
-      let file = await getFilesFromPath(basePath);
+      const basePath = await namespaceWrapper.getBasePath();
+      let file = await getFilesFromPath(`${basePath}/${path}`);
 
       const cid = await storageClient.put(file);
       console.log('Arweave healthy list to IPFS: ', cid);

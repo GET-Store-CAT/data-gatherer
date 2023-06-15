@@ -63,7 +63,7 @@ const run = async round => {
 };
 
 async function uploadIPFS(data, round) {
-  let proofPath = `/proofs${round}.json`;
+  let proofPath = `proofs${round}.json`;
 
   try {
     const resp = await namespaceWrapper.fs('access', proofPath);
@@ -107,11 +107,8 @@ async function uploadIPFS(data, round) {
   }
 
   if (storageClient) {
-    const basePath = (await namespaceWrapper.getTaskLevelDBPath()).replace(
-      '/KOIIDB',
-      proofPath,
-    );
-    let file = await getFilesFromPath(basePath);
+    const basePath = await namespaceWrapper.getBasePath();
+    let file = await getFilesFromPath(`${basePath}/${proofPath}`);
 
     const proof_cid = await storageClient.put(file);
     console.log(`Proofs of healthy list in round ${round} : `, proof_cid);

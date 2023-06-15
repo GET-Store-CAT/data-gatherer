@@ -7,15 +7,11 @@ const {
 } = require('./namespaceWrapper');
 // const localShim = require('./k2-local-debugger'); // TEST to enable testing with K2 without round timers, enable this line and line 38
 const routes = require('./routes');
-const logOverwrite = require('./log-overwrite');
 
 async function setup() {
   console.log('setup function called');
   // Run default setup
   await namespaceWrapper.defaultTaskSetup();
-
-  // Setup log overwriting
-  logOverwrite();
 
   process.on('message', m => {
     console.log('CHILD got message:', m);
@@ -37,7 +33,6 @@ async function setup() {
     }
   });
 
-  // localShim(); // TEST enable this to run the localShim for testing with K2 without timers
 }
 
 // Run main task

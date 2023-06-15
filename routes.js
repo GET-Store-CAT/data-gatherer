@@ -2,10 +2,7 @@ const express = require('express');
 const router = express.Router();
 const dataDb = require('./helpers/db');
 const fs = require('fs');
-const {
-  namespaceWrapper,
-  taskNodeAdministered,
-} = require('./namespaceWrapper');
+const { namespaceWrapper } = require('./namespaceWrapper');
 const { TASK_ID } = require('./init');
 
 // Middleware to log incoming requests
@@ -24,12 +21,12 @@ router.get('/taskState', async (req, res) => {
 
 // Get Logs
 router.get('/logs', async (req, res) => {
-  let logs;
-  if (taskNodeAdministered) {
-    logs = namespaceWrapper.fs('readFile', `./namespace/${TASK_ID}/logs.txt`, 'utf8');
-  } else {
-    logs = fs.readFileSync('./namespace/logs.txt', 'utf8');
-  }
+  let logs = namespaceWrapper.fs(
+    'readFile',
+    `./namespace/${TASK_ID}/logs.txt`,
+    'utf8',
+  );
+
   res.status(200).send(logs);
 });
 

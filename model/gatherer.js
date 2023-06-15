@@ -21,10 +21,7 @@ const storageClient = new Web3Storage({
   token: process.env.SECRET_WEB3_STORAGE_KEY,
 });
 const { Queue } = require('async-await-queue');
-const {
-  namespaceWrapper,
-  taskNodeAdministered,
-} = require('../namespaceWrapper');
+const { namespaceWrapper } = require('../namespaceWrapper');
 const { TASK_ID } = require('../init');
 
 class Gatherer {
@@ -134,36 +131,26 @@ class Gatherer {
   // TODO - test this one
   uploadIPFS = async function (data) {
     let path = `healthyList.json`;
-    if (taskNodeAdministered) {
-      if (!namespaceWrapper.fs('access', path))
-        namespaceWrapper.fs('mkdir', path);
-    } else {
-      if (!fs.existsSync(`./arweave`)) fs.mkdirSync(`./arweave`);
-    }
+
+    if (!namespaceWrapper.fs('access', path))
+      namespaceWrapper.fs('mkdir', path);
 
     console.log('PATH', path);
 
-    if (taskNodeAdministered) {
-      await namespaceWrapper.fs('writeFile', `${path}`, JSON.stringify(data), err => {
+    await namespaceWrapper.fs(
+      'writeFile',
+      `${path}`,
+      JSON.stringify(data),
+      err => {
         if (err) {
           console.error(err);
         }
-      });
-    } else {
-      await fsPromise.writeFile(path, JSON.stringify(data), err => {
-        if (err) {
-          console.error(err);
-        }
-      });
-    }
+      },
+    );
 
     if (storageClient) {
-      let file;
-      if (taskNodeAdministered) {
-        file = await getFilesFromPath(`namespace/${TASK_ID}/${path}`);
-      } else {
-        file = await getFilesFromPath(path);
-      }
+      let file = await getFilesFromPath(`namespace/${TASK_ID}/${path}`);
+
       const cid = await storageClient.put(file);
       console.log('Arweave healthy list to IPFS: ', cid);
 
@@ -195,7 +182,12 @@ class Gatherer {
       let pendingId = `pending:${item}`;
       await this.db.deleteItem(pendingId);
       this.queried.push(item.location);
-      console.log("healthy? ", result.isHealthy, "contains tx? ", result.containsTx)
+      console.log(
+        'healthy? ',
+        result.isHealthy,
+        'contains tx? ',
+        result.containsTx,
+      );
       if (result.isHealthy) {
         console.log('received ', result.peers.length, ' peers');
         await this.adapter.storeListAsPendingItems(result.peers);
@@ -263,19 +255,14 @@ class Gatherer {
   };
 
   addToHealthy(nodeLocation) {
-    if (taskNodeAdministered) {
-      namespaceWrapper.fs('appendFile',
-        `healthy.txt`,
-        nodeLocation + ' ',
-        function (err) {
-          if (err) throw err;
-        },
-      );
-    } else {
-      fs.appendFile('./healthy.txt', nodeLocation + ' ', function (err) {
+    namespaceWrapper.fs(
+      'appendFile',
+      `healthy.txt`,
+      nodeLocation + ' ',
+      function (err) {
         if (err) throw err;
-      });
-    }
+      },
+    );
   }
 
   updateHealthy = async function (peerLocation) {

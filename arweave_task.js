@@ -1,9 +1,6 @@
 const Gatherer = require('./model/gatherer');
 const Arweave = require('./adapters/arweave/arweave');
-const {
-  namespaceWrapper,
-  taskNodeAdministered,
-} = require('./namespaceWrapper');
+const { namespaceWrapper } = require('./namespaceWrapper');
 const { Keypair } = require('@solana/web3.js'); // TEST For local testing only
 const fs = require('fs');
 const nacl = require('tweetnacl');
@@ -68,57 +65,35 @@ const run = async round => {
 async function uploadIPFS(data, round) {
   let proofPath = `proofs${round}.json`;
 
-  if (taskNodeAdministered) {
-    if (!namespaceWrapper.fs('access', proofPath)) {
-      namespaceWrapper.fs('mkdir', proofPath);
-    }
-  } else {
-    if (!fs.existsSync(`proofPath`)) fs.mkdirSync(`proofPath`);
+  if (!namespaceWrapper.fs('access', proofPath)) {
+    namespaceWrapper.fs('mkdir', proofPath);
   }
 
   console.log('proofPATH', proofPath);
 
-  if (taskNodeAdministered) {
-    await namespaceWrapper.fs('writeFile', 
-      proofPath,
-      JSON.stringify(data),
-      err => {
-        if (err) {
-          console.error(err);
-        }
-      },
-    );
-  } else {
-    await fsPromise.writeFile(proofPath, JSON.stringify(data), err => {
+  await namespaceWrapper.fs(
+    'writeFile',
+    proofPath,
+    JSON.stringify(data),
+    err => {
       if (err) {
         console.error(err);
       }
-    });
-  }
+    },
+  );
 
   if (storageClient) {
-    let file;
-    if (taskNodeAdministered) {
-      file = await getFilesFromPath(`namespace/${TASK_ID}/${proofPath}`);
-    } else {
-      file = await getFilesFromPath(proofPath);
-    }
+    let file = await getFilesFromPath(`namespace/${TASK_ID}/${proofPath}`);
+
     const proof_cid = await storageClient.put(file);
     console.log(`Proofs of healthy list in round ${round} : `, proof_cid);
 
-    if (taskNodeAdministered) {
-      try {
-        await namespaceWrapper.fs('unlink', proofPath);
-      } catch (err) {
-        console.error(err);
-      }
-    } else {
-      try {
-        await fsPromise.unlink(proofPath);
-      } catch (err) {
-        console.error(err);
-      }
+    try {
+      await namespaceWrapper.fs('unlink', proofPath);
+    } catch (err) {
+      console.error(err);
     }
+
     return proof_cid;
   } else {
     console.log('NODE DO NOT HAVE ACCESS TO WEB3.STORAGE');

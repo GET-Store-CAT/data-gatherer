@@ -1,9 +1,10 @@
+/**
+ * NOTICE: THIS FUNCTION IS BEEN ARCHIVED AND IS NO LONGER IN USE
+ */
+
 const fs = require('fs');
 const path = require('path');
-const {
-  namespaceWrapper,
-  taskNodeAdministered,
-} = require('./namespaceWrapper');
+const { namespaceWrapper } = require('./namespaceWrapper');
 const { TASK_ID } = require('./init');
 
 const logOverwrite = async () => {
@@ -15,20 +16,13 @@ const logOverwrite = async () => {
   const maxLogAgeInDays = 3;
 
   // Check if the log directory exists, if not, create it
-  if (taskNodeAdministered) {
-    logPath = `${logPath}`;
-    if (!namespaceWrapper.fs('access', logPath)) {
-      await namespaceWrapper.fs('mkdir', logPath);
-    }
-  } else {
-    if (!fs.existsSync(logPath)) {
-      fs.mkdirSync(logPath);
 
-      // Create a writable stream to the log file
-    }
+  if (!namespaceWrapper.fs('access', logPath)) {
+    await namespaceWrapper.fs('mkdir', logPath);
   }
 
-  let logStream = fs.createWriteStream(`namespace/${TASK_ID}/${logPath}`, {
+  // ! THIS IS THE LINE THAT IS CAUSING THE ERROR
+  let logStream = namespaceWrapper.fsWriteStream(`namespace/${TASK_ID}/${logPath}`, {
     flags: 'a',
   });
 
@@ -53,25 +47,13 @@ async function cleanOldLogs(logDir, logFile, maxLogAgeInDays) {
   const currentDate = new Date();
   const logPath = path.join(logDir, logFile);
 
-  if (taskNodeAdministered) {
-    if (namespaceWrapper.fs('access', logPath)) {
-      const fileStats = namespaceWrapper.fs('stat', logPath);
-      const fileAgeInDays =
-        (currentDate - fileStats.mtime) / (1000 * 60 * 60 * 24);
+  if (namespaceWrapper.fs('access', logPath)) {
+    const fileStats = namespaceWrapper.fs('stat', logPath);
+    const fileAgeInDays =
+      (currentDate - fileStats.mtime) / (1000 * 60 * 60 * 24);
 
-      if (fileAgeInDays > maxLogAgeInDays) {
-        namespaceWrapper.fs('unlink', logPath);
-      }
-    }
-  } else {
-    if (fs.existsSync(logPath)) {
-      const fileStats = fs.statSync(logPath);
-      const fileAgeInDays =
-        (currentDate - fileStats.mtime) / (1000 * 60 * 60 * 24);
-
-      if (fileAgeInDays > maxLogAgeInDays) {
-        fs.unlinkSync(logPath);
-      }
+    if (fileAgeInDays > maxLogAgeInDays) {
+      namespaceWrapper.fs('unlink', logPath);
     }
   }
 }

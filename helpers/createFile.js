@@ -1,9 +1,8 @@
-const fsPromise = require("fs/promises");
+const {namespaceWrapper} = require("../namespaceWrapper");
 
 module.exports = async (path, data) => {
-  //if (!fs.existsSync('userIndex')) fs.mkdirSync('userIndex');
 
-  await fsPromise.writeFile(path, JSON.stringify(data), (err) => {
+  await namespaceWrapper.fs('writeFile', path, JSON.stringify(data), (err) => {
     if (err) {
       console.error(err);
     }

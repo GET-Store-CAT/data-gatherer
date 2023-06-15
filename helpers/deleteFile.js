@@ -1,9 +1,8 @@
-const fsPromise = require("fs/promises");
+const {namespaceWrapper} = require("../namespaceWrapper");
 
 module.exports = async (path) => {
-  //if (!fs.existsSync('userIndex')) fs.mkdirSync('userIndex');
 
-  await fsPromise.unlink(path, (err) => {
+  await namespaceWrapper.fs('unlink', path, (err) => {
     if (err) {
       console.error(err);
     }

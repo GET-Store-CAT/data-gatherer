@@ -2,11 +2,9 @@ const Gatherer = require('./model/gatherer');
 const Arweave = require('./adapters/arweave/arweave');
 const { namespaceWrapper } = require('./namespaceWrapper');
 const { Keypair } = require('@solana/web3.js'); // TEST For local testing only
-const fs = require('fs');
 const nacl = require('tweetnacl');
 const bs58 = require('bs58');
 const dataDb = require('./helpers/db');
-const fsPromise = require('fs/promises');
 const { Web3Storage, getFilesFromPath } = require('web3.storage');
 const storageClient = new Web3Storage({
   token: process.env.SECRET_WEB3_STORAGE_KEY,

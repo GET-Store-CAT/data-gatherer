@@ -14,8 +14,6 @@ const Data = require('./data');
 const Search = require('./search');
 const Twitter = require('../adapters/twitter');
 const Peer = require('../adapters/arweave/peer');
-const fs = require('fs');
-const fsPromise = require('fs/promises');
 const { Web3Storage, getFilesFromPath } = require('web3.storage');
 const storageClient = new Web3Storage({
   token: process.env.SECRET_WEB3_STORAGE_KEY,

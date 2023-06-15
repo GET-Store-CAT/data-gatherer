@@ -128,28 +128,54 @@ class Gatherer {
     }
   };
 
-  // TODO - test this one
   uploadIPFS = async function (data) {
-    let path = `healthyList.json`;
+    let path = `/healthyList.json`;
 
-    if (!namespaceWrapper.fs('access', path))
-      namespaceWrapper.fs('mkdir', path);
-
-    console.log('PATH', path);
-
-    await namespaceWrapper.fs(
-      'writeFile',
-      `${path}`,
-      JSON.stringify(data),
-      err => {
-        if (err) {
-          console.error(err);
-        }
-      },
-    );
+    try {
+      const resp = await namespaceWrapper.fs('access', path);
+      if (!resp.errpr) {
+        console.log('healthy list file exists, appending');
+        await namespaceWrapper.fs(
+          'appendFile',
+          path,
+          JSON.stringify(data),
+          function (err) {
+            if (err) throw err;
+          },
+        );
+      } else {
+        console.log('creating healthy list file');
+        await namespaceWrapper.fs(
+          'writeFile',
+          path,
+          JSON.stringify(data),
+          err => {
+            if (err) {
+              console.error(err);
+            }
+          },
+        );
+      }
+    } catch (err) {
+      console.log('creating healthy list file');
+      await namespaceWrapper.fs(
+        'writeFile',
+        path,
+        JSON.stringify(data),
+        err => {
+          if (err) {
+            console.error(err);
+          }
+        },
+      );
+    }
 
     if (storageClient) {
-      let file = await getFilesFromPath(`namespace/${TASK_ID}/${path}`);
+      const basePath = (await namespaceWrapper.getTaskLevelDBPath()).replace(
+        '/KOIIDB',
+        path,
+      );
+      let file = await getFilesFromPath(basePath);
 
       const cid = await storageClient.put(file);
       console.log('Arweave healthy list to IPFS: ', cid);

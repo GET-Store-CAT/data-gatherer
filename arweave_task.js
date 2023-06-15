@@ -63,27 +63,55 @@ const run = async round => {
 };
 
 async function uploadIPFS(data, round) {
-  let proofPath = `proofs${round}.json`;
+  let proofPath = `/proofs${round}.json`;
 
-  if (!namespaceWrapper.fs('access', proofPath)) {
-    namespaceWrapper.fs('mkdir', proofPath);
+  try {
+    const resp = await namespaceWrapper.fs('access', proofPath);
+    if (!resp.error) {
+      console.log('proofs file exists, appending to it now');
+      namespaceWrapper.fs(
+        'appendFile',
+        proofPath,
+        JSON.stringify(data),
+        err => {
+          if (err) {
+            console.error(err);
+          }
+        },
+      );
+    } else {
+      await namespaceWrapper.fs(
+        'writeFile',
+        proofPath,
+        JSON.stringify(data),
+        err => {
+          if (err) {
+            console.error(err);
+          }
+        },
+      );
+    }
+  } catch (err) {
+    console.log('proofs file does not exist, creating it now ', err);
+    // console.log('proofPATH', proofPath);
+    await namespaceWrapper.fs(
+      'writeFile',
+      proofPath,
+      JSON.stringify(data),
+      err => {
+        if (err) {
+          console.error(err);
+        }
+      },
+    );
   }
 
-  console.log('proofPATH', proofPath);
-
-  await namespaceWrapper.fs(
-    'writeFile',
-    proofPath,
-    JSON.stringify(data),
-    err => {
-      if (err) {
-        console.error(err);
-      }
-    },
-  );
-
   if (storageClient) {
-    let file = await getFilesFromPath(`namespace/${TASK_ID}/${proofPath}`);
+    const basePath = (await namespaceWrapper.getTaskLevelDBPath()).replace(
+      '/KOIIDB',
+      proofPath,
+    );
+    let file = await getFilesFromPath(basePath);
 
     const proof_cid = await storageClient.put(file);
     console.log(`Proofs of healthy list in round ${round} : `, proof_cid);

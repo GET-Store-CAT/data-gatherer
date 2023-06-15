@@ -10,12 +10,13 @@ const routes = require('./routes');
 const logOverwrite = require('./log-overwrite');
 
 async function setup() {
-  // Setup log overwriting
-  logOverwrite();
-
   console.log('setup function called');
   // Run default setup
   await namespaceWrapper.defaultTaskSetup();
+
+  // Setup log overwriting
+  logOverwrite();
+
   process.on('message', m => {
     console.log('CHILD got message:', m);
     if (m.functionCall == 'submitPayload') {
@@ -47,5 +48,5 @@ if (taskNodeAdministered) {
 // Run server
 if (app) {
   app.use(express.json());
-  app.use('/', routes)
+  app.use('/', routes);
 }

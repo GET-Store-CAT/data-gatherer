@@ -22,13 +22,14 @@ module.exports = async (submission_value, round) => {
   let isPeer = await verifyPeers(output.proofs);
   console.log('Are peers True?', isPeer);
 
-  if (isNode && isPeer) return true; // if both are true, return true
+  if (isNode == true && isPeer == true) return true; // if both are true, return true
   else return false; // if one of them is false, return false
 };
 
 // verify the linktree signature by querying the other node to get it's copy of the linktree
 async function verifyPeers(proofs) {
-  const healthyList = await dataFromCid(proofs);
+  const healthyListRAW = await dataFromCid(proofs);
+  const healthyList = healthyListRAW.data;
   if (!healthyList) {
     console.log('No data received from web3.storage');
     return false;

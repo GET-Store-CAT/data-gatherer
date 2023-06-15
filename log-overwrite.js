@@ -16,48 +16,21 @@ const logOverwrite = async () => {
 
   // Check if the log directory exists, if not, create it
   if (taskNodeAdministered) {
-    logPath = `${logPath}`
+    logPath = `${logPath}`;
     if (!namespaceWrapper.fs('access', logPath)) {
       await namespaceWrapper.fs('mkdir', logPath);
-
     }
   } else {
     if (!fs.existsSync(logPath)) {
       fs.mkdirSync(logPath);
 
       // Create a writable stream to the log file
-      
     }
   }
 
-  // Function to remove logs older than specified age (in 3 days)
-  async function cleanOldLogs(logDir, logFile, maxLogAgeInDays) {
-    const currentDate = new Date();
-    const logPath = path.join(logDir, logFile);
-
-    if (taskNodeAdministered) {
-      if (namespaceWrapper.fs('access', logPath)) {
-        const fileStats = namespaceWrapper.fs('stat', logPath);
-        const fileAgeInDays =
-          (currentDate - fileStats.mtime) / (1000 * 60 * 60 * 24);
-
-        if (fileAgeInDays > maxLogAgeInDays) {
-          namespaceWrapper.fs('unlink', logPath);
-        }
-      }
-    } else {
-      if (fs.existsSync(logPath)) {
-        const fileStats = fs.statSync(logPath);
-        const fileAgeInDays =
-          (currentDate - fileStats.mtime) / (1000 * 60 * 60 * 24);
-
-        if (fileAgeInDays > maxLogAgeInDays) {
-          fs.unlinkSync(logPath);
-        }
-      }
-    }
-  }
-  let logStream = fs.createWriteStream(`namespace/${TASK_ID}/${logPath}`, { flags: 'a' });
+  let logStream = fs.createWriteStream(`namespace/${TASK_ID}/${logPath}`, {
+    flags: 'a',
+  });
 
   // Overwrite the console.log function to write to the log file
   console.log = function (...args) {
@@ -74,5 +47,33 @@ const logOverwrite = async () => {
   // Clean old logs
   await cleanOldLogs(logDir, logFile, maxLogAgeInDays);
 };
+
+// Function to remove logs older than specified age (in 3 days)
+async function cleanOldLogs(logDir, logFile, maxLogAgeInDays) {
+  const currentDate = new Date();
+  const logPath = path.join(logDir, logFile);
+
+  if (taskNodeAdministered) {
+    if (namespaceWrapper.fs('access', logPath)) {
+      const fileStats = namespaceWrapper.fs('stat', logPath);
+      const fileAgeInDays =
+        (currentDate - fileStats.mtime) / (1000 * 60 * 60 * 24);
+
+      if (fileAgeInDays > maxLogAgeInDays) {
+        namespaceWrapper.fs('unlink', logPath);
+      }
+    }
+  } else {
+    if (fs.existsSync(logPath)) {
+      const fileStats = fs.statSync(logPath);
+      const fileAgeInDays =
+        (currentDate - fileStats.mtime) / (1000 * 60 * 60 * 24);
+
+      if (fileAgeInDays > maxLogAgeInDays) {
+        fs.unlinkSync(logPath);
+      }
+    }
+  }
+}
 
 module.exports = logOverwrite;

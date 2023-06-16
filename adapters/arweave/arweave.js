@@ -12,9 +12,6 @@ const {
   until,
   Capabilities,
 } = require('selenium-webdriver');
-const puppeteer = require('puppeteer');
-const PCR = require("puppeteer-chromium-resolver");
-const cheerio = require('cheerio');
 
 class Arweave extends Adapter {
   constructor(credentials, maxRetry, db, txId) {
@@ -128,27 +125,9 @@ class Arweave extends Adapter {
       console.log('fetching peer list');
       let newNodes = [];
 
-      const options = {};
-      const stats = await PCR(options);
-  
-      let browser = await stats.puppeteer.launch({ 
-        headless: 'new',
-        executablePath: stats.executablePath 
-      });
-
-      const page = await browser.newPage();
-      await page.goto('https://arweave.net' + '/peers');
-
-      const html = await page.content();
-      const $ = cheerio.load(html);
-      // console.log('html', html);
-
-      $('body').each((i, el) => {
-        let peers = $(el).find('pre').text();
-        peers = peers.split(',');
-        // console.log('peers', peers);
-        newNodes = peers;
-      });
+      let response = await axios.get('https://arweave.net/peers');
+      let peers = response.data;
+      newNodes = peers;
 
       return newNodes;
     } catch (err) {
